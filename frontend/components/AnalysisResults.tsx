@@ -50,6 +50,16 @@ function CustomSelectionTooltip({ active, payload }: ChartTooltipProps) {
 }
 
 export function AnalysisResults({ result }: AnalysisResultsProps) {
+    const confidenceScore = result.confidence_score ?? 0;
+    const confidenceValue = Math.round(confidenceScore);
+    const confidenceExplanation = result.confidence_explanation ?? [];
+    const confidenceStyle =
+        confidenceScore >= 70
+            ? "bg-green-50 border-green-300 text-green-700"
+            : confidenceScore >= 40
+                ? "bg-yellow-50 border-yellow-300 text-yellow-700"
+                : "bg-red-50 border-red-300 text-red-700";
+
     const selectionChartData = Object.entries(result.selection_rates).map(([group, rate]) => ({
         name: group,
         rate: Number((rate * 100).toFixed(0)),
@@ -78,15 +88,15 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
 
     const verdictByRisk: Record<string, { text: string; style: string }> = {
         "High Risk": {
-            text: "⚠ Significant bias detected in decision outcomes",
+            text: "🔴 Significant bias detected",
             style: "bg-red-50 border-red-300 text-red-700",
         },
         "Moderate Risk": {
-            text: "⚠ Potential bias detected. Review recommended",
+            text: "🟡 Potential bias detected",
             style: "bg-yellow-50 border-yellow-300 text-yellow-700",
         },
         "Low Risk": {
-            text: "✅ No significant bias detected",
+            text: "🟢 No significant bias detected",
             style: "bg-green-50 border-green-300 text-green-700",
         },
     };
@@ -95,26 +105,81 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
     const referenceGroup = Object.entries(result.selection_rates).sort(
         (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
     )[0]?.[0] ?? "other groups";
+    const warnings = result.warnings ?? [];
+    const recommendations = result.recommendations ?? [];
+    const lowConfidenceDisclaimer = confidenceScore < 40
+        ? "⚠ Results may be unreliable due to insufficient data"
+        : null;
+    const verdictText = result.verdict_message ?? verdict.text;
 
     return (
         <div className="w-full space-y-8">
-            <div className="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-3 py-1">
-                <span className="text-sm font-semibold text-blue-700">
-                    {result.analysis_type === "model_prediction"
-                        ? "Model Prediction Bias Analysis"
-                        : "Dataset Bias Analysis"}
-                </span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-3 py-1">
+                    <span className="text-sm font-semibold text-blue-700">
+                        {result.analysis_type === "model_prediction"
+                            ? "Model Prediction Bias Analysis"
+                            : "Dataset Bias Analysis"}
+                    </span>
+                </div>
+
+                {result.data_quality_label && (
+                    <div className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1">
+                        <span className="text-sm font-semibold text-slate-700">
+                            Data Quality: {result.data_quality_label}
+                        </span>
+                    </div>
+                )}
             </div>
+
+            {warnings.length > 0 && (
+                <div className="rounded-lg border border-orange-300 bg-orange-50 p-4">
+                    <h4 className="text-sm font-semibold text-orange-800 mb-2">Warnings</h4>
+                    <ul className="space-y-2">
+                        {warnings.map((warning, index) => (
+                            <li key={`${index}-${warning}`} className="flex items-start gap-2 text-sm text-orange-800">
+                                <span className="mt-0.5 font-bold">⚠</span>
+                                <span>{warning}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             <div className={`rounded-lg border p-6 ${riskStyle}`}>
                 <h4 className="text-sm font-semibold mb-3">Fairness Score</h4>
                 <p className="text-4xl font-bold mb-2">{result.fairness_score} / 100</p>
                 <p className="text-sm font-semibold">Risk Level: {result.fairness_risk_level}</p>
+                <div className={`mt-4 rounded-md border px-4 py-3 ${confidenceStyle}`}>
+                    <p className="text-sm font-semibold">Confidence Score: {confidenceValue}%</p>
+                    <p className="text-xs mt-1 opacity-90">Confidence score reflects reliability based on dataset size and balance.</p>
+                    {confidenceExplanation.length > 0 && (
+                        <div className="mt-2">
+                            <p className="text-xs font-semibold mb-1">Confidence details:</p>
+                            <ul className="space-y-1">
+                                {confidenceExplanation.map((item, index) => (
+                                    <li key={`${index}-${item}`} className="text-xs flex items-start gap-2">
+                                        <span>•</span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {result.score_reliability_warning && (
+                        <p className="text-xs font-semibold mt-3 border-t border-current/20 pt-2">
+                            {result.score_reliability_warning}
+                        </p>
+                    )}
+                </div>
             </div>
 
             <div className={`rounded-lg border p-5 ${verdict.style}`}>
                 <h4 className="text-sm font-semibold mb-2">Final Verdict</h4>
-                <p className="text-base font-semibold">{verdict.text}</p>
+                <p className="text-base font-semibold">{verdictText}</p>
+                {lowConfidenceDisclaimer && (
+                    <p className="text-sm font-semibold mt-2">{lowConfidenceDisclaimer}</p>
+                )}
                 <p className="text-sm mt-3">
                     {result.most_affected_group} applicants receive {result.impact_gap_percentage.toFixed(1)}% lower selection rate than {referenceGroup} applicants
                 </p>
@@ -233,7 +298,7 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                                     <td className="px-4 py-2 text-gray-800">{counts.selected}</td>
                                     <td className="px-4 py-2 text-gray-800">{counts.total}</td>
                                     <td className="px-4 py-2 font-semibold text-gray-800">
-                                        {((counts.selected / counts.total) * 100).toFixed(0)}%
+                                        {counts.total > 0 ? `${((counts.selected / counts.total) * 100).toFixed(0)}%` : "N/A"}
                                     </td>
                                 </tr>
                             ))}
@@ -241,6 +306,20 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                     </table>
                 </div>
             </div>
+
+            {recommendations.length > 0 && (
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Recommended Actions</h4>
+                    <ul className="space-y-2">
+                        {recommendations.map((recommendation, index) => (
+                            <li key={`${index}-${recommendation}`} className="flex items-start gap-3 text-gray-700">
+                                <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                                <span>{recommendation}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {/* Bias Insights Panel */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">

@@ -26,6 +26,13 @@ export interface AnalysisResult {
     selection_counts: Record<string, GroupSelectionCount>;
     false_positive_rates?: Record<string, number> | null;
     equal_opportunity_difference?: number | null;
+    confidence_score?: number | null;
+    warnings?: string[] | null;
+    data_quality_label?: "High" | "Medium" | "Low" | null;
+    verdict_message?: string | null;
+    confidence_explanation?: string[] | null;
+    score_reliability_warning?: string | null;
+    recommendations?: string[] | null;
     demographic_parity_difference: number;
     disparate_impact: number;
     fairness_score: number;

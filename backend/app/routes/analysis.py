@@ -25,7 +25,8 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
             prediction_column=payload.prediction_column,
         )
 
-        save_analysis_result(payload.dataset_id, analysis["analysis_type"], analysis)
+        save_analysis_result(payload.dataset_id,
+                             analysis["analysis_type"], analysis)
 
         return AnalyzeBiasResponse(
             analysis_type=analysis["analysis_type"],
@@ -38,6 +39,14 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
             disparate_impact=analysis["disparate_impact"],
             false_positive_rates=analysis["false_positive_rates"],
             equal_opportunity_difference=analysis["equal_opportunity_difference"],
+            confidence_score=analysis.get("confidence_score"),
+            warnings=analysis.get("warnings"),
+            data_quality_label=analysis.get("data_quality_label"),
+            verdict_message=analysis.get("verdict_message"),
+            confidence_explanation=analysis.get("confidence_explanation"),
+            score_reliability_warning=analysis.get(
+                "score_reliability_warning"),
+            recommendations=analysis.get("recommendations"),
             fairness_score=analysis["fairness_score"],
             fairness_risk_level=analysis["fairness_risk_level"],
             most_affected_group=analysis["most_affected_group"],
@@ -50,4 +59,5 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze dataset: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to analyze dataset: {exc}") from exc
