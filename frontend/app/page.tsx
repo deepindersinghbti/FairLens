@@ -119,63 +119,138 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">FairLens</h1>
-          <p className="text-lg font-medium text-gray-700">AI Fairness Auditor for Automated Decisions</p>
-          <p className="text-gray-600 mt-2">
-            Detect bias in datasets and machine learning models before they impact real people.
-          </p>
-        </div>
+    <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:p-8 lg:p-10">
+          <div className="max-w-3xl space-y-6">
+            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+              AI Fairness Auditor
+            </div>
+            <div className="space-y-4">
+              <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                FairLens
+              </h1>
+              <p className="max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
+                Audit datasets and model predictions for bias with a workflow designed for clear, defensible fairness review.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["Dataset Bias Detection", "Review selection differences in raw data."],
+                ["Model Prediction Analysis", "Inspect fairness in automated decisions."],
+                ["Clear Fairness Insights", "Get concise risk and recommendation summaries."],
+              ].map(([title, description]) => (
+                <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-900">{title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {error && (
-          <div className="w-full bg-red-50 border-l-4 border-red-500 p-4">
-            <p className="text-red-700 font-semibold">{error}</p>
+          <div role="alert" aria-live="polite" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">
+            <p className="text-sm font-semibold">{error}</p>
           </div>
         )}
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-5">
-              Step 1: Upload Dataset
-            </h2>
-            <div className="space-y-5">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] sm:p-8">
+            <div className="flex flex-col gap-3 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Primary workflow</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                  Upload a dataset to begin
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  Start with a CSV file or load a demo dataset to see how FairLens structures fairness auditing end to end.
+                </p>
+              </div>
+              <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                Step 1 of 3
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-5">
               <CSVUpload onUpload={handleUpload} isLoading={isUploading} />
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleLoadDemo("loan")}
-                  disabled={isLoadingDemo || isUploading}
-                  className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                >
-                  {isLoadingDemo ? "Loading Demo..." : "Try Loan Bias Demo"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLoadDemo("prediction")}
-                  disabled={isLoadingDemo || isUploading}
-                  className="w-full sm:w-auto px-4 py-2 bg-slate-700 text-white font-semibold rounded-md hover:bg-slate-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                >
-                  {isLoadingDemo ? "Loading Demo..." : "Try Model Bias Demo"}
-                </button>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Use a guided demo</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Load a representative example to review the product flow before uploading your own data.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() => handleLoadDemo("loan")}
+                      disabled={isLoadingDemo || isUploading}
+                      className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:w-auto"
+                    >
+                      {isLoadingDemo ? "Loading demo..." : "Try Loan Bias Demo"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLoadDemo("prediction")}
+                      disabled={isLoadingDemo || isUploading}
+                      className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
+                    >
+                      {isLoadingDemo ? "Loading demo..." : "Try Model Bias Demo"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {datasetId && columns.length > 0 && (
-            <>
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-5">
-                  Step 2: Preview
-                </h2>
-                <DatasetPreview columns={columns} preview={preview} />
+          <aside className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Workflow cues</p>
+            <h3 className="mt-2 text-xl font-semibold text-slate-950">What judges see first</h3>
+            <div className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="font-semibold text-slate-900">1. Upload or load data</p>
+                <p className="mt-1">A polished upload surface makes the primary action obvious.</p>
               </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="font-semibold text-slate-900">2. Configure the audit</p>
+                <p className="mt-1">Select target and sensitive columns with clear validation feedback.</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="font-semibold text-slate-900">3. Review fairness signals</p>
+                <p className="mt-1">Results are grouped into risk, metrics, charts, and recommendations.</p>
+              </div>
+            </div>
+          </aside>
+        </section>
 
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-5">
-                  Step 3: Configure Analysis
-                </h2>
+        {datasetId && columns.length > 0 && (
+          <section className="grid gap-6 lg:grid-cols-5">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] lg:col-span-3 sm:p-8">
+              <div className="flex items-end justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Step 2</p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Dataset preview</h2>
+                </div>
+                <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                  {preview.length} rows loaded
+                </div>
+              </div>
+              <div className="mt-6">
+                <DatasetPreview columns={columns} preview={preview} rowCount={preview.length} />
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] lg:col-span-2 sm:p-8">
+              <div className="border-b border-slate-200 pb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Step 3</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Configure analysis</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Choose the outcome column and protected attribute. The prediction column is optional for model audits.
+                </p>
+              </div>
+              <div className="mt-6">
                 <AnalysisControls
                   columns={columns}
                   targetColumn={targetColumn}
@@ -188,32 +263,37 @@ export default function Home() {
                   isLoading={isAnalyzing}
                 />
               </div>
+            </div>
 
-              {result && (
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Fairness Analysis Results
-                  </h2>
-                  <AnalysisResults result={result} />
-
-                  <div className="mt-6">
-                    <button
-                      onClick={handleDownloadReport}
-                      disabled={isDownloadingReport}
-                      className="px-4 py-2 bg-gray-900 text-white font-semibold rounded-md hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                    >
-                      {isDownloadingReport ? "Generating Report..." : "Download Fairness Audit Report"}
-                    </button>
+            {result && (
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] lg:col-span-5 sm:p-8">
+                <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Step 4</p>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                      Fairness analysis results
+                    </h2>
                   </div>
+                  <button
+                    onClick={handleDownloadReport}
+                    disabled={isDownloadingReport}
+                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                  >
+                    {isDownloadingReport ? "Generating report..." : "Download fairness audit report"}
+                  </button>
                 </div>
-              )}
-            </>
-          )}
-        </div>
 
-        <div className="text-center text-sm text-gray-500">
+                <div className="mt-6">
+                  <AnalysisResults result={result} />
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        <footer className="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
           <p>Phase 3 MVP • Dataset and Model Prediction Bias Analysis</p>
-        </div>
+        </footer>
       </div>
     </main>
   );

@@ -24,21 +24,27 @@ export function AnalysisControls({
     isLoading,
 }: AnalysisControlsProps) {
     const isValid = targetColumn && sensitiveAttribute && targetColumn !== sensitiveAttribute;
+    const invalidSelection = targetColumn && sensitiveAttribute && targetColumn === sensitiveAttribute;
 
     return (
-        <div className="w-full space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Analysis Configuration</h3>
+        <div className="w-full space-y-5">
+            <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-slate-950">Analysis configuration</h3>
+                <p className="text-sm leading-6 text-slate-600">
+                    Select the outcome and protected attribute to define the fairness audit.
+                </p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
                         Target Column (Outcome)
                     </label>
                     <select
                         value={targetColumn}
                         onChange={(e) => onTargetChange(e.target.value)}
                         disabled={isLoading}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100"
                     >
                         <option value="">Select target column</option>
                         {columns.map((col) => (
@@ -50,14 +56,14 @@ export function AnalysisControls({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
                         Sensitive Attribute
                     </label>
                     <select
                         value={sensitiveAttribute}
                         onChange={(e) => onSensitiveChange(e.target.value)}
                         disabled={isLoading}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100"
                     >
                         <option value="">Select sensitive attribute</option>
                         {columns.map((col) => (
@@ -69,14 +75,14 @@ export function AnalysisControls({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
                         Prediction Column (Optional)
                     </label>
                     <select
                         value={predictionColumn}
                         onChange={(e) => onPredictionChange(e.target.value)}
                         disabled={isLoading}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100"
                     >
                         <option value="">None (Dataset Bias Analysis)</option>
                         {columns
@@ -90,10 +96,16 @@ export function AnalysisControls({
                 </div>
             </div>
 
+            {invalidSelection && (
+                <p className="text-sm font-medium text-amber-700">
+                    Choose different columns for the outcome and sensitive attribute.
+                </p>
+            )}
+
             <button
                 onClick={onAnalyze}
                 disabled={!isValid || isLoading}
-                className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
                 {isLoading ? "Analyzing..." : "Run Bias Analysis"}
             </button>
