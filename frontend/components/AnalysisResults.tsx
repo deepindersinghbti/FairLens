@@ -112,6 +112,13 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
         : null;
     const verdictText = result.verdict_message ?? verdict.text;
     const panelClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
+    const aiInsights = result.ai_fairness_insights ?? null;
+    const aiRiskStyle: Record<string, string> = {
+        Low: "bg-green-50 border-green-200 text-green-800",
+        Medium: "bg-yellow-50 border-yellow-200 text-yellow-800",
+        High: "bg-red-50 border-red-200 text-red-800",
+    };
+    const aiRiskClass = aiInsights ? aiRiskStyle[aiInsights.risk_level] ?? aiRiskStyle.High : "";
 
     return (
         <div className="w-full space-y-6">
@@ -344,6 +351,48 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                         </li>
                     ))}
                 </ul>
+            </div>
+
+            <div className={panelClass}>
+                <h4 className="text-lg font-semibold text-slate-950">AI Fairness Insights</h4>
+                {aiInsights ? (
+                    <div className="mt-3 space-y-4">
+                        <div>
+                            <p className="text-sm font-semibold text-slate-500">Summary</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-700">{aiInsights.summary}</p>
+                        </div>
+
+                        <div className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${aiRiskClass}`}>
+                            Risk Level: {aiInsights.risk_level}
+                        </div>
+
+                        <div>
+                            <p className="text-sm font-semibold text-slate-500">Key Issues</p>
+                            <ul className="mt-2 space-y-2">
+                                {aiInsights.issues.map((issue, index) => (
+                                    <li key={`${index}-${issue}`} className="flex items-start gap-3 text-slate-700">
+                                        <span className="mt-0.5 font-bold text-amber-600">•</span>
+                                        <span>{issue}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div>
+                            <p className="text-sm font-semibold text-slate-500">Recommendations</p>
+                            <ul className="mt-2 space-y-2">
+                                {aiInsights.recommendations.map((item, index) => (
+                                    <li key={`${index}-${item}`} className="flex items-start gap-3 text-slate-700">
+                                        <span className="mt-0.5 font-bold text-emerald-600">•</span>
+                                        <span>{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="mt-2 text-sm text-slate-600">AI insights are currently unavailable.</p>
+                )}
             </div>
         </div>
     );

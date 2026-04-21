@@ -20,6 +20,13 @@ export interface GroupSelectionCount {
     total: number;
 }
 
+export interface AIFairnessInsights {
+    summary: string;
+    risk_level: "Low" | "Medium" | "High";
+    issues: string[];
+    recommendations: string[];
+}
+
 export interface AnalysisResult {
     analysis_type: "dataset" | "model_prediction";
     selection_rates: Record<string, number>;
@@ -41,6 +48,7 @@ export interface AnalysisResult {
     impact_gap_percentage: number;
     bias_detected: boolean;
     insights: string[];
+    ai_fairness_insights?: AIFairnessInsights | null;
 }
 
 export async function uploadDataset(file: File): Promise<UploadResponse> {
