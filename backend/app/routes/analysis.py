@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.schemas.request import AnalyzeBiasRequest
 from app.schemas.response import AnalyzeBiasResponse, GroupSelectionCount
+from app.services.ai_service import generate_ai_insights
 from app.services.analysis_store import save_analysis_result
 from app.services.bias_service import BiasService
 from app.services.dataset_service import DatasetService
@@ -24,6 +25,8 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
             sensitive_attribute=payload.sensitive_attribute,
             prediction_column=payload.prediction_column,
         )
+
+        analysis["ai_fairness_insights"] = generate_ai_insights(analysis)
 
         save_analysis_result(payload.dataset_id,
                              analysis["analysis_type"], analysis)
@@ -53,6 +56,7 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
             impact_gap_percentage=analysis["impact_gap_percentage"],
             bias_detected=analysis["bias_detected"],
             insights=analysis["insights"],
+            ai_fairness_insights=analysis.get("ai_fairness_insights"),
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

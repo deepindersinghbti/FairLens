@@ -14,6 +14,13 @@ class GroupSelectionCount(BaseModel):
     total: int
 
 
+class AIFairnessInsights(BaseModel):
+    summary: str
+    risk_level: str
+    issues: List[str]
+    recommendations: List[str]
+
+
 class AnalyzeBiasResponse(BaseModel):
     analysis_type: str
     selection_rates: Dict[str, float]
@@ -35,6 +42,7 @@ class AnalyzeBiasResponse(BaseModel):
     impact_gap_percentage: float
     bias_detected: bool
     insights: List[str]
+    ai_fairness_insights: AIFairnessInsights | None = None
 
 
 class LoadDemoResponse(BaseModel):
