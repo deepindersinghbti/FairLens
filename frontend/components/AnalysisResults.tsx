@@ -11,6 +11,12 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import { AnalysisResult } from "@/lib/api";
+import {
+    chartEdgeMessages,
+    formatPercent,
+    normalizeFalsePositiveRates,
+    normalizeSelectionRates,
+} from "@/lib/chartUtils";
 
 interface AnalysisResultsProps {
     result: AnalysisResult;
@@ -20,8 +26,8 @@ interface TooltipPayload {
     name: string;
     value: number;
     payload: {
-        name: string;
-        rate: number;
+        group: string;
+        selectionRate: number;
         selected?: number;
         total?: number;
     };
@@ -40,8 +46,8 @@ function CustomSelectionTooltip({ active, payload }: ChartTooltipProps) {
     const point = payload[0].payload;
     return (
         <div className="bg-white border border-gray-300 rounded-md px-3 py-2 text-sm shadow-sm">
-            <p className="font-semibold text-gray-900">{point.name}</p>
-            <p className="text-gray-700">Selection Rate: {point.rate}%</p>
+            <p className="font-semibold text-gray-900">{point.group}</p>
+            <p className="text-gray-700">Selection Rate: {formatPercent(point.selectionRate, 0)}</p>
             <p className="text-gray-700">
                 Selected: {point.selected} / {point.total}
             </p>
@@ -60,18 +66,11 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                 ? "bg-yellow-50 border-yellow-300 text-yellow-700"
                 : "bg-red-50 border-red-300 text-red-700";
 
-    const selectionChartData = Object.entries(result.selection_rates).map(([group, rate]) => ({
-        name: group,
-        rate: Number((rate * 100).toFixed(0)),
-        selected: result.selection_counts[group]?.selected ?? 0,
-        total: result.selection_counts[group]?.total ?? 0,
-    }));
+    const selectionChartData = normalizeSelectionRates(result.selection_rates, result.selection_counts);
+    const selectionMessages = chartEdgeMessages(selectionChartData);
 
     const falsePositiveRateMap = result.false_positive_rates ?? {};
-    const modelChartData = Object.entries(falsePositiveRateMap).map(([group, rate]) => ({
-        name: group,
-        rate: Number((rate * 100).toFixed(0)),
-    }));
+    const modelChartData = normalizeFalsePositiveRates(result.false_positive_rates);
 
     const fprValues = Object.values(falsePositiveRateMap);
     const falsePositiveRateDifference = fprValues.length
@@ -222,7 +221,7 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                         {Object.entries(result.selection_rates).map(([group, rate]) => (
                             <div key={group} className="flex justify-between text-sm">
                                 <span className="text-slate-600">{group}:</span>
-                                <span className="font-semibold text-slate-950">{(rate * 100).toFixed(0)}%</span>
+                                <span className="font-semibold text-slate-950">{formatPercent(rate * 100, 0)}</span>
                             </div>
                         ))}
                     </div>
@@ -250,11 +249,20 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className={panelClass}>
                     <h4 className="text-lg font-semibold text-slate-950">Selection rate by group</h4>
+                    {selectionMessages.length > 0 && (
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                            {selectionMessages.map((message) => (
+                                <p key={message} className="text-xs font-medium text-amber-900">
+                                    {message}
+                                </p>
+                            ))}
+                        </div>
+                    )}
                     <div className="mt-4">
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={selectionChartData} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={{ stroke: "#cbd5e1" }} tickLine={{ stroke: "#cbd5e1" }} />
+                                <XAxis dataKey="group" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={{ stroke: "#cbd5e1" }} tickLine={{ stroke: "#cbd5e1" }} />
                                 <YAxis
                                     domain={[0, 100]}
                                     ticks={[0, 20, 40, 60, 80, 100]}
@@ -264,8 +272,8 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                                     label={{ value: "Selection Rate (%)", angle: -90, position: "insideLeft" }}
                                 />
                                 <Tooltip content={<CustomSelectionTooltip />} />
-                                <Bar dataKey="rate" fill="#1d4ed8" name="Selection Rate" radius={[8, 8, 0, 0]}>
-                                    <LabelList dataKey="rate" position="top" formatter={(value) => `${value}%`} />
+                                <Bar dataKey="selectionRate" fill="#1d4ed8" name="Selection Rate" radius={[8, 8, 0, 0]}>
+                                    <LabelList dataKey="selectionRate" position="top" formatter={(value) => formatPercent(Number(value), 0)} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -276,24 +284,30 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                     <div className={panelClass}>
                         <h4 className="text-lg font-semibold text-slate-950">False positive rate by group</h4>
                         <div className="mt-4">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={modelChartData} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                    <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={{ stroke: "#cbd5e1" }} tickLine={{ stroke: "#cbd5e1" }} />
-                                    <YAxis
-                                        domain={[0, 100]}
-                                        ticks={[0, 20, 40, 60, 80, 100]}
-                                        tick={{ fill: "#64748b", fontSize: 12 }}
-                                        axisLine={{ stroke: "#cbd5e1" }}
-                                        tickLine={{ stroke: "#cbd5e1" }}
-                                        label={{ value: "False Positive Rate (%)", angle: -90, position: "insideLeft" }}
-                                    />
-                                    <Tooltip formatter={(value) => `${value}%`} />
-                                    <Bar dataKey="rate" fill="#ea580c" name="False Positive Rate" radius={[8, 8, 0, 0]}>
-                                        <LabelList dataKey="rate" position="top" formatter={(value) => `${value}%`} />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {modelChartData.length === 0 ? (
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+                                    False positive rate data is unavailable for the selected groups.
+                                </div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={modelChartData} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                        <XAxis dataKey="group" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={{ stroke: "#cbd5e1" }} tickLine={{ stroke: "#cbd5e1" }} />
+                                        <YAxis
+                                            domain={[0, 100]}
+                                            ticks={[0, 20, 40, 60, 80, 100]}
+                                            tick={{ fill: "#64748b", fontSize: 12 }}
+                                            axisLine={{ stroke: "#cbd5e1" }}
+                                            tickLine={{ stroke: "#cbd5e1" }}
+                                            label={{ value: "False Positive Rate (%)", angle: -90, position: "insideLeft" }}
+                                        />
+                                        <Tooltip formatter={(value) => formatPercent(Number(value), 0)} />
+                                        <Bar dataKey="falsePositiveRate" fill="#ea580c" name="False Positive Rate" radius={[8, 8, 0, 0]}>
+                                            <LabelList dataKey="falsePositiveRate" position="top" formatter={(value) => formatPercent(Number(value), 0)} />
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </div>
                 )}

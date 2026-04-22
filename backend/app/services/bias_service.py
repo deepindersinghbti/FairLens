@@ -7,6 +7,43 @@ import pandas as pd
 
 class BiasService:
     @staticmethod
+    def _normalize_optional_prediction(prediction_column: str | None) -> str | None:
+        if prediction_column is None:
+            return None
+
+        normalized = str(prediction_column).strip()
+        if not normalized:
+            return None
+
+        if normalized.lower() in {"none", "null"}:
+            return None
+
+        return normalized
+
+    @staticmethod
+    def _resolve_column_name(dataframe: pd.DataFrame, column_name: str, field_label: str) -> str:
+        requested = column_name.strip()
+        if not requested:
+            raise ValueError(f"{field_label} cannot be empty")
+
+        if requested in dataframe.columns:
+            return requested
+
+        lowered = requested.lower()
+        candidates = [col for col in dataframe.columns if str(col).lower() == lowered]
+
+        if len(candidates) == 1:
+            return str(candidates[0])
+
+        if len(candidates) > 1:
+            raise ValueError(
+                f"{field_label} '{column_name}' is ambiguous. Matches: {', '.join(str(col) for col in candidates)}"
+            )
+
+        available = ", ".join(str(col) for col in dataframe.columns)
+        raise ValueError(f"{field_label} '{column_name}' not found. Available columns: {available}")
+
+    @staticmethod
     def _dataset_quality_metadata(
         dataframe: pd.DataFrame,
         sensitive_attribute: str,
@@ -205,6 +242,22 @@ class BiasService:
         ]
 
     @staticmethod
+    def _append_data_shape_insights(
+        insights: List[str], selection_rates: Dict[str, float]
+    ) -> List[str]:
+        augmented = list(insights)
+
+        if len(selection_rates) == 1:
+            augmented.append(
+                "Only one group detected; disparity comparisons are limited."
+            )
+
+        if selection_rates and all(rate == 0 for rate in selection_rates.values()):
+            augmented.append("All groups have 0% selection rate.")
+
+        return augmented
+
+    @staticmethod
     def _prediction_insights(
         disparate_impact: float,
         equal_opportunity_difference: float,
@@ -400,10 +453,13 @@ class BiasService:
                           ) if fpr_values else 0.0
 
         bias_detected = disparate_impact < 0.8 or equal_opportunity_difference > 0.1 or fpr_difference > 0.1
-        insights = BiasService._prediction_insights(
+        insights = BiasService._append_data_shape_insights(
+            BiasService._prediction_insights(
             disparate_impact=disparate_impact,
             equal_opportunity_difference=equal_opportunity_difference,
             false_positive_rates=false_positive_rates,
+            ),
+            selection_rates,
         )
 
         return (
@@ -424,7 +480,23 @@ class BiasService:
         sensitive_attribute: str,
         prediction_column: str | None = None,
     ) -> dict:
-        if prediction_column:
+        resolved_target = BiasService._resolve_column_name(
+            dataframe, target_column, "Target column"
+        )
+        resolved_sensitive = BiasService._resolve_column_name(
+            dataframe, sensitive_attribute, "Sensitive attribute"
+        )
+        normalized_prediction = BiasService._normalize_optional_prediction(prediction_column)
+        resolved_prediction = None
+
+        if normalized_prediction is not None:
+            resolved_prediction = BiasService._resolve_column_name(
+                dataframe, normalized_prediction, "Prediction column"
+            )
+
+        mode = "dataset" if resolved_prediction is None else "model"
+
+        if mode == "model":
             (
                 selection_rates,
                 selection_counts,
@@ -436,9 +508,9 @@ class BiasService:
                 equal_opportunity_difference,
             ) = BiasService._model_prediction_metrics(
                 dataframe=dataframe,
-                target_column=target_column,
-                sensitive_attribute=sensitive_attribute,
-                prediction_column=prediction_column,
+                target_column=resolved_target,
+                sensitive_attribute=resolved_sensitive,
+                prediction_column=resolved_prediction,
             )
 
             (
@@ -453,7 +525,7 @@ class BiasService:
                 is_imbalanced,
             ) = BiasService._dataset_quality_metadata(
                 dataframe=dataframe,
-                sensitive_attribute=sensitive_attribute,
+                sensitive_attribute=resolved_sensitive,
             )
 
             fairness_score = BiasService._model_fairness_score(
@@ -514,8 +586,8 @@ class BiasService:
             insights,
         ) = BiasService._dataset_metrics(
             dataframe=dataframe,
-            target_column=target_column,
-            sensitive_attribute=sensitive_attribute,
+            target_column=resolved_target,
+            sensitive_attribute=resolved_sensitive,
         )
 
         (
@@ -530,7 +602,7 @@ class BiasService:
             is_imbalanced,
         ) = BiasService._dataset_quality_metadata(
             dataframe=dataframe,
-            sensitive_attribute=sensitive_attribute,
+            sensitive_attribute=resolved_sensitive,
         )
 
         fairness_score, fairness_risk_level = BiasService._fairness_score_and_risk(

@@ -1,19 +1,26 @@
 #!/usr/bin/env python
 import json
+import os
+
 import requests
 
-BASE_URL = "http://localhost:8000/api"
+BASE_URL = os.getenv("FAIRLENS_TEST_BASE_URL", "http://localhost:8000/api")
+REQUEST_TIMEOUT = int(os.getenv("FAIRLENS_TEST_TIMEOUT", "60"))
 
 
 def upload(path):
     with open(path, "rb") as f:
-        response = requests.post(f"{BASE_URL}/upload-dataset", files={"file": f})
+        response = requests.post(
+            f"{BASE_URL}/upload-dataset", files={"file": f}, timeout=REQUEST_TIMEOUT
+        )
     response.raise_for_status()
     return response.json()["dataset_id"]
 
 
 def analyze(payload):
-    response = requests.post(f"{BASE_URL}/analyze-bias", json=payload)
+    response = requests.post(
+        f"{BASE_URL}/analyze-bias", json=payload, timeout=REQUEST_TIMEOUT
+    )
     response.raise_for_status()
     return response.json()
 

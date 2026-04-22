@@ -23,8 +23,17 @@ export function AnalysisControls({
     onAnalyze,
     isLoading,
 }: AnalysisControlsProps) {
-    const isValid = targetColumn && sensitiveAttribute && targetColumn !== sensitiveAttribute;
-    const invalidSelection = targetColumn && sensitiveAttribute && targetColumn === sensitiveAttribute;
+    const normalizedPrediction = predictionColumn.trim();
+    const mode = normalizedPrediction ? "model" : "dataset";
+    const invalidTargetSensitive =
+        !!targetColumn && !!sensitiveAttribute && targetColumn === sensitiveAttribute;
+    const invalidPredictionTarget =
+        mode === "model" && normalizedPrediction === targetColumn;
+    const invalidPredictionSensitive =
+        mode === "model" && normalizedPrediction === sensitiveAttribute;
+    const hasValidationError =
+        invalidTargetSensitive || invalidPredictionTarget || invalidPredictionSensitive;
+    const isValid = !!targetColumn && !!sensitiveAttribute && !hasValidationError;
 
     return (
         <div className="w-full space-y-5">
@@ -32,6 +41,9 @@ export function AnalysisControls({
                 <h3 className="text-lg font-semibold text-slate-950">Analysis configuration</h3>
                 <p className="text-sm leading-6 text-slate-600">
                     Select the outcome and protected attribute to define the fairness audit.
+                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    Mode: {mode === "model" ? "Model Fairness" : "Dataset Bias"}
                 </p>
             </div>
 
@@ -96,9 +108,21 @@ export function AnalysisControls({
                 </div>
             </div>
 
-            {invalidSelection && (
+            {invalidTargetSensitive && (
                 <p className="text-sm font-medium text-amber-700">
                     Choose different columns for the outcome and sensitive attribute.
+                </p>
+            )}
+
+            {invalidPredictionTarget && (
+                <p className="text-sm font-medium text-amber-700">
+                    Prediction column and target column must be different.
+                </p>
+            )}
+
+            {invalidPredictionSensitive && (
+                <p className="text-sm font-medium text-amber-700">
+                    Prediction column and sensitive attribute must be different.
                 </p>
             )}
 

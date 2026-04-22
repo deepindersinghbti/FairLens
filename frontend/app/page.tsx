@@ -77,6 +77,11 @@ export default function Home() {
       return;
     }
 
+    const normalizedPrediction = predictionColumn.trim();
+    const predictionForRequest = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
+      ? undefined
+      : normalizedPrediction;
+
     setIsAnalyzing(true);
     setError("");
     try {
@@ -84,7 +89,7 @@ export default function Home() {
         datasetId,
         targetColumn,
         sensitiveAttribute,
-        predictionColumn || undefined
+        predictionForRequest
       );
       setResult(analysisResult);
     } catch (err) {

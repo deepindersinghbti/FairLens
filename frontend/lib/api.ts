@@ -74,6 +74,11 @@ export async function analyzeBias(
     sensitiveAttribute: string,
     predictionColumn?: string
 ): Promise<AnalysisResult> {
+    const normalizedPrediction = (predictionColumn ?? "").trim();
+    const predictionForPayload = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
+        ? undefined
+        : normalizedPrediction;
+
     const payload: {
         dataset_id: string;
         target_column: string;
@@ -85,8 +90,8 @@ export async function analyzeBias(
         sensitive_attribute: sensitiveAttribute,
     };
 
-    if (predictionColumn) {
-        payload.prediction_column = predictionColumn;
+    if (predictionForPayload) {
+        payload.prediction_column = predictionForPayload;
     }
 
     const response = await fetch(`${API_BASE}/analyze-bias`, {

@@ -1,19 +1,26 @@
 #!/usr/bin/env python
 import json
+import os
+
 import requests
 
-BASE_URL = "http://localhost:8000/api"
+BASE_URL = os.getenv("FAIRLENS_TEST_BASE_URL", "http://localhost:8000/api")
+REQUEST_TIMEOUT = int(os.getenv("FAIRLENS_TEST_TIMEOUT", "60"))
 
 
 def upload(path: str) -> str:
     with open(path, "rb") as handle:
-        response = requests.post(f"{BASE_URL}/upload-dataset", files={"file": handle})
+        response = requests.post(
+            f"{BASE_URL}/upload-dataset", files={"file": handle}, timeout=REQUEST_TIMEOUT
+        )
     response.raise_for_status()
     return response.json()["dataset_id"]
 
 
 def analyze(payload: dict) -> dict:
-    response = requests.post(f"{BASE_URL}/analyze-bias", json=payload)
+    response = requests.post(
+        f"{BASE_URL}/analyze-bias", json=payload, timeout=REQUEST_TIMEOUT
+    )
     response.raise_for_status()
     return response.json()
 
@@ -22,6 +29,7 @@ def download_report(dataset_id: str, analysis_type: str) -> bytes:
     response = requests.get(
         f"{BASE_URL}/generate-report",
         params={"dataset_id": dataset_id, "analysis_type": analysis_type},
+        timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
     return response.content
