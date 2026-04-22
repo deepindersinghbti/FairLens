@@ -158,6 +158,36 @@ class ReportService:
         for recommendation in analysis.get("recommendations") or ["Continue monitoring fairness as more data becomes available"]:
             story.append(Paragraph(f"- {recommendation}", styles["BodyText"]))
 
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("10. AI Fairness Insights", styles["Heading2"]))
+        ai_insights = analysis.get("ai_fairness_insights")
+        if ai_insights:
+            summary = ai_insights.get("summary")
+            risk_level = ai_insights.get("risk_level")
+            issues = ai_insights.get("issues") or []
+            ai_recommendations = ai_insights.get("recommendations") or []
+
+            if summary:
+                story.append(Paragraph(f"Summary: {summary}", styles["BodyText"]))
+            if risk_level:
+                story.append(Paragraph(
+                    f"AI Risk Assessment: {risk_level}", styles["BodyText"]))
+
+            if issues:
+                story.append(Spacer(1, 8))
+                story.append(Paragraph("AI-Identified Issues", styles["BodyText"]))
+                for issue in issues:
+                    story.append(Paragraph(f"- {issue}", styles["BodyText"]))
+
+            if ai_recommendations:
+                story.append(Spacer(1, 8))
+                story.append(Paragraph("AI Recommendations", styles["BodyText"]))
+                for recommendation in ai_recommendations:
+                    story.append(Paragraph(f"- {recommendation}", styles["BodyText"]))
+        else:
+            story.append(Paragraph(
+                "AI insights were unavailable for this analysis.", styles["BodyText"]))
+
         document.build(story)
         pdf_bytes = buffer.getvalue()
         buffer.close()
