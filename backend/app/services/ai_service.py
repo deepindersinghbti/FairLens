@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Any
 
 try:
@@ -67,6 +68,9 @@ def generate_ai_insights(metrics: dict[str, Any]) -> dict[str, Any] | None:
     if genai is None:
         return None
 
+    if os.getenv("FAIRLENS_AI_INSIGHTS_ENABLED", "true").strip().lower() in {"0", "false", "no"}:
+        return None
+
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return None
@@ -127,13 +131,23 @@ Do not include markdown fences.
 Do not include any extra commentary outside the JSON.
 """.strip()
 
+    request_timeout_seconds = float(os.getenv("FAIRLENS_AI_TIMEOUT_SECONDS", "6"))
+    hard_deadline = time.monotonic() + max(1.0, request_timeout_seconds)
+
     try:
         genai.configure(api_key=api_key)
         raw_text = ""
         for model_name in model_names:
+            if time.monotonic() >= hard_deadline:
+                break
+
+            remaining = max(1.0, hard_deadline - time.monotonic())
             try:
                 model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt)
+                response = model.generate_content(
+                    prompt,
+                    request_options={"timeout": remaining},
+                )
                 raw_text = getattr(response, "text", "") or ""
                 if raw_text:
                     break

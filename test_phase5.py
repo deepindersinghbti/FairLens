@@ -1,9 +1,11 @@
 import json
+import os
 from io import BytesIO
 
 import requests
 
-BASE_URL = "http://127.0.0.1:8000/api"
+BASE_URL = os.getenv("FAIRLENS_TEST_BASE_URL", "http://127.0.0.1:8000/api")
+REQUEST_TIMEOUT = int(os.getenv("FAIRLENS_TEST_TIMEOUT", "60"))
 
 
 def assert_true(condition, message):
@@ -20,13 +22,17 @@ def analyze(dataset_id, target, sensitive, prediction=None):
     if prediction:
         payload["prediction_column"] = prediction
 
-    response = requests.post(f"{BASE_URL}/analyze-bias", json=payload, timeout=20)
+    response = requests.post(
+        f"{BASE_URL}/analyze-bias", json=payload, timeout=REQUEST_TIMEOUT
+    )
     assert_true(response.status_code == 200, f"Analyze failed: {response.status_code} {response.text}")
     return response.json()
 
 
 def load_demo(demo_type):
-    response = requests.get(f"{BASE_URL}/load-demo", params={"type": demo_type}, timeout=20)
+    response = requests.get(
+        f"{BASE_URL}/load-demo", params={"type": demo_type}, timeout=REQUEST_TIMEOUT
+    )
     assert_true(response.status_code == 200, f"Load demo failed: {response.status_code} {response.text}")
     return response.json()
 
@@ -35,7 +41,7 @@ def download_report(dataset_id, analysis_type):
     response = requests.get(
         f"{BASE_URL}/generate-report",
         params={"dataset_id": dataset_id, "analysis_type": analysis_type},
-        timeout=20,
+        timeout=REQUEST_TIMEOUT,
     )
     assert_true(response.status_code == 200, f"Report failed: {response.status_code} {response.text}")
     assert_true(response.headers.get("content-type", "").startswith("application/pdf"), "Report content type is not PDF")
