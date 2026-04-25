@@ -112,6 +112,9 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
     const verdictText = result.verdict_message ?? verdict.text;
     const panelClass = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
     const aiInsights = result.ai_fairness_insights ?? null;
+    const aiSource = result.ai_insights_source ?? null;
+    const aiWarning = result.ai_insights_warning ?? null;
+    const aiSourceLabel = aiSource === "gemini" ? "Source: Gemini" : aiSource === "fallback" ? "Source: Local fallback" : null;
     const aiRiskStyle: Record<string, string> = {
         Low: "bg-green-50 border-green-200 text-green-800",
         Medium: "bg-yellow-50 border-yellow-200 text-yellow-800",
@@ -369,8 +372,14 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
 
             <div className={panelClass}>
                 <h4 className="text-lg font-semibold text-slate-950">AI Fairness Insights</h4>
+                {aiSourceLabel && (
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{aiSourceLabel}</p>
+                )}
                 {aiInsights ? (
                     <div className="mt-3 space-y-4">
+                        {aiWarning && (
+                            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{aiWarning}</p>
+                        )}
                         <div>
                             <p className="text-sm font-semibold text-slate-500">Summary</p>
                             <p className="mt-1 text-sm leading-6 text-slate-700">{aiInsights.summary}</p>
@@ -405,7 +414,7 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                         </div>
                     </div>
                 ) : (
-                    <p className="mt-2 text-sm text-slate-600">AI insights are currently unavailable.</p>
+                    <p className="mt-2 text-sm text-slate-600">AI insights could not be generated for this run. Review the metric-based insights above.</p>
                 )}
             </div>
         </div>

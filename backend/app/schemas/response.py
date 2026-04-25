@@ -43,6 +43,8 @@ class AnalyzeBiasResponse(BaseModel):
     bias_detected: bool
     insights: List[str]
     ai_fairness_insights: AIFairnessInsights | None = None
+    ai_insights_source: str | None = None
+    ai_insights_warning: str | None = None
 
 
 class LoadDemoResponse(BaseModel):

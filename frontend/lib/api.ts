@@ -49,6 +49,8 @@ export interface AnalysisResult {
     bias_detected: boolean;
     insights: string[];
     ai_fairness_insights?: AIFairnessInsights | null;
+    ai_insights_source?: "gemini" | "fallback" | string | null;
+    ai_insights_warning?: string | null;
 }
 
 export async function uploadDataset(file: File): Promise<UploadResponse> {

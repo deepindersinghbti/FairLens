@@ -60,7 +60,8 @@ print(json.dumps(analysis_resp, indent=2))
 print("\n3. Validating response schema")
 print("-" * 60)
 
-required_fields = ["selection_rates", "selection_counts", "demographic_parity_difference", "disparate_impact", "bias_detected"]
+required_fields = ["selection_rates", "selection_counts",
+                   "demographic_parity_difference", "disparate_impact", "bias_detected"]
 for field in required_fields:
     if field in analysis_resp:
         print(f"✓ {field}: {analysis_resp[field]}")
@@ -68,8 +69,25 @@ for field in required_fields:
         print(f"❌ Missing field: {field}")
         exit(1)
 
+print("\n5. Checking AI insights payload")
+print("-" * 60)
+ai_block = analysis_resp.get("ai_fairness_insights")
+if not isinstance(ai_block, dict):
+    print("❌ Missing ai_fairness_insights payload")
+    exit(1)
+
+for ai_field in ["summary", "risk_level", "issues", "recommendations"]:
+    if ai_field not in ai_block:
+        print(f"❌ Missing ai_fairness_insights.{ai_field}")
+        exit(1)
+
+print(f"✓ ai_fairness_insights present")
+print(f"  Source: {analysis_resp.get('ai_insights_source')}")
+if analysis_resp.get("ai_insights_warning"):
+    print(f"  Warning: {analysis_resp.get('ai_insights_warning')}")
+
 # Check bias rule
-print("\n4. Checking bias detection rule")
+print("\n6. Checking bias detection rule")
 print("-" * 60)
 di = analysis_resp["disparate_impact"]
 bias = analysis_resp["bias_detected"]
@@ -80,10 +98,12 @@ print(f"  Threshold: {threshold}")
 print(f"  Bias Detected (expected if DI < {threshold}): {bias}")
 
 if di < threshold and not bias:
-    print(f"❌ Bias detection logic error: DI={di} < {threshold} but bias_detected={bias}")
+    print(
+        f"❌ Bias detection logic error: DI={di} < {threshold} but bias_detected={bias}")
     exit(1)
 elif di >= threshold and bias:
-    print(f"❌ Bias detection logic error: DI={di} >= {threshold} but bias_detected={bias}")
+    print(
+        f"❌ Bias detection logic error: DI={di} >= {threshold} but bias_detected={bias}")
     exit(1)
 else:
     print(f"✓ Bias detection rule working correctly")
