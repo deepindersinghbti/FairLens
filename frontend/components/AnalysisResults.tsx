@@ -1,5 +1,7 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
     BarChart,
     Bar,
@@ -382,7 +384,11 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                         )}
                         <div>
                             <p className="text-sm font-semibold text-slate-500">Summary</p>
-                            <p className="mt-1 text-sm leading-6 text-slate-700">{aiInsights.summary}</p>
+                            <div className="mt-1 prose prose-sm max-w-none">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {aiInsights.summary}
+                                </ReactMarkdown>
+                            </div>
                         </div>
 
                         <div className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${aiRiskClass}`}>
@@ -395,7 +401,11 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                                 {aiInsights.issues.map((issue, index) => (
                                     <li key={`${index}-${issue}`} className="flex items-start gap-3 text-slate-700">
                                         <span className="mt-0.5 font-bold text-amber-600">•</span>
-                                        <span>{issue}</span>
+                                        <div className="prose prose-sm max-w-none">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {issue}
+                                            </ReactMarkdown>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
@@ -407,7 +417,11 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                                 {aiInsights.recommendations.map((item, index) => (
                                     <li key={`${index}-${item}`} className="flex items-start gap-3 text-slate-700">
                                         <span className="mt-0.5 font-bold text-emerald-600">•</span>
-                                        <span>{item}</span>
+                                        <div className="prose prose-sm max-w-none">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {item}
+                                            </ReactMarkdown>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
