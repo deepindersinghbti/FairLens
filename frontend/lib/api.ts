@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface UploadResponse {
     dataset_id: string;
@@ -57,7 +57,7 @@ export async function uploadDataset(file: File): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${API_BASE}/upload-dataset`, {
+    const response = await fetch(`${API_BASE_URL}/api/upload-dataset`, {
         method: "POST",
         body: formData,
     });
@@ -96,7 +96,7 @@ export async function analyzeBias(
         payload.prediction_column = predictionForPayload;
     }
 
-    const response = await fetch(`${API_BASE}/analyze-bias`, {
+    const response = await fetch(`${API_BASE_URL}/api/analyze-bias`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -114,7 +114,7 @@ export async function downloadFairnessReport(
     datasetId: string,
     analysisType: "dataset" | "model_prediction"
 ): Promise<Blob> {
-    const url = `${API_BASE}/generate-report?dataset_id=${encodeURIComponent(datasetId)}&analysis_type=${encodeURIComponent(analysisType)}`;
+    const url = `${API_BASE_URL}/api/generate-report?dataset_id=${encodeURIComponent(datasetId)}&analysis_type=${encodeURIComponent(analysisType)}`;
     const response = await fetch(url, { method: "GET" });
 
     if (!response.ok) {
@@ -126,7 +126,7 @@ export async function downloadFairnessReport(
 }
 
 export async function loadDemoDataset(type: "loan" | "prediction"): Promise<LoadDemoResponse> {
-    const response = await fetch(`${API_BASE}/load-demo?type=${encodeURIComponent(type)}`, {
+    const response = await fetch(`${API_BASE_URL}/api/load-demo?type=${encodeURIComponent(type)}`, {
         method: "GET",
     });
 

@@ -2,5 +2,7 @@ venv/
 node_modules/
 uploads/
 .env
+.env.local
+.next
 __pycache__/
 *.csv
