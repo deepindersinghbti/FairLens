@@ -16,12 +16,21 @@ except ImportError:
     def load_dotenv(*args: Any, **kwargs: Any) -> bool:
         return False
 
+from .gemini_key_manager import (
+    get_gemini_key_manager,
+    _is_retryable_error,
+    classify_error,
+)
+
 
 logger = logging.getLogger(__name__)
 
 BACKEND_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=BACKEND_ENV_PATH)
 load_dotenv()
+
+# Initialize key manager singleton (loads keys from environment)
+_key_manager = get_gemini_key_manager()
 
 
 def _normalize_risk_level(value: Any, fallback_risk: str | None) -> str:
@@ -111,8 +120,8 @@ def _attempt_gemini_insights(metrics: dict[str, Any]) -> tuple[dict[str, Any] | 
     if os.getenv("FAIRLENS_AI_INSIGHTS_ENABLED", "true").strip().lower() in {"0", "false", "no"}:
         return None, "ai_insights_disabled"
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
+    # Check if any API keys are available (supports both GEMINI_API_KEY and GEMINI_API_KEYS)
+    if not _key_manager.has_keys():
         return None, "gemini_api_key_missing"
 
     configured_model = os.getenv("GEMINI_MODEL", "").strip()
@@ -176,33 +185,90 @@ Do not include any extra commentary outside the JSON.
         os.getenv("FAIRLENS_AI_TIMEOUT_SECONDS", "6"))
     hard_deadline = time.monotonic() + max(1.0, request_timeout_seconds)
 
-    try:
-        genai.configure(api_key=api_key)
-    except Exception:
-        return None, "gemini_configuration_failed"
-
-    raw_text = ""
-    model_error = "gemini_no_model_response"
-    for model_name in model_names:
+    # Outer loop: try each available API key (max attempts = number of keys, prevents infinite loops)
+    max_key_attempts = _key_manager.get_max_attempts()
+    for key_attempt in range(max_key_attempts):
         if time.monotonic() >= hard_deadline:
-            model_error = "gemini_timeout"
-            break
+            return None, "gemini_timeout"
 
-        remaining = max(1.0, hard_deadline - time.monotonic())
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(
-                prompt,
-                request_options={"timeout": remaining},
-            )
-            raw_text = getattr(response, "text", "") or ""
-            if raw_text:
+            api_key = _key_manager.get_next_key()
+        except ValueError:
+            return None, "gemini_no_keys_available"
+
+        try:
+            genai.configure(api_key=api_key)
+        except Exception as config_error:
+            is_retryable_config, reason_config = classify_error(config_error)
+            # Treat configuration/auth errors as non-retryable in most cases;
+            # still log reason and mark key accordingly.
+            _key_manager.mark_key_failed(
+                is_retryable=is_retryable_config, reason=reason_config)
+            if key_attempt < max_key_attempts - 1 and is_retryable_config:
+                logger.debug(
+                    "Gemini configuration failed, trying next key (reason=%s)", reason_config)
+                continue
+            return None, "gemini_configuration_failed"
+
+        # Inner loop: try model candidates with current key
+        raw_text = ""
+        model_error = "gemini_no_model_response"
+        for model_name in model_names:
+            if time.monotonic() >= hard_deadline:
+                model_error = "gemini_timeout"
                 break
-        except Exception:
-            model_error = "gemini_model_request_failed"
-            continue
+
+            remaining = max(1.0, hard_deadline - time.monotonic())
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(
+                    prompt,
+                    request_options={"timeout": remaining},
+                )
+                raw_text = getattr(response, "text", "") or ""
+                if raw_text:
+                    break
+            except Exception as model_error_exc:
+                model_error = "gemini_model_request_failed"
+                # Classify error: retryable (quota/rate limit) vs non-retryable (bad request)
+                is_retryable, reason = classify_error(model_error_exc)
+
+                if is_retryable:
+                    logger.debug(
+                        "Gemini model request failed with retryable error (key attempt %d/%d): %s (reason=%s)",
+                        key_attempt + 1,
+                        max_key_attempts,
+                        type(model_error_exc).__name__,
+                        reason,
+                    )
+                    # Try next key
+                    _key_manager.mark_key_failed(
+                        is_retryable=True, reason=reason)
+                    break  # Break inner loop, continue outer loop to next key
+                else:
+                    logger.debug(
+                        "Gemini model request failed with non-retryable error: %s (reason=%s)",
+                        type(model_error_exc).__name__,
+                        reason,
+                    )
+                    # Non-retryable error: don't try next key, fail immediately
+                    _key_manager.mark_key_failed(
+                        is_retryable=False, reason=reason)
+                    return None, model_error
+
+        if raw_text:
+            # Success: response received, parse and return
+            break
+        elif time.monotonic() >= hard_deadline:
+            # Timeout reached
+            return None, "gemini_timeout"
+        # Otherwise, loop to try next key
 
     if not raw_text:
+        logger.warning(
+            "All Gemini API keys exhausted (attempted %d keys) - returning fallback",
+            max_key_attempts,
+        )
         return None, model_error
 
     json_text = _extract_json_text(raw_text)
