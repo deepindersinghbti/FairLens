@@ -5,4 +5,3 @@ uploads/
 .env.local
 .next
 __pycache__/
-*.csv
