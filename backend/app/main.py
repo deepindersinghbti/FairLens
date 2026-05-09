@@ -14,7 +14,8 @@ app = FastAPI(title="FairLens API", version="0.1.0")
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://fair-lens-sigma.vercel.app",
+    "https://deepinder-fairlens.vercel.app",
+    "https://fair-lens-sigma.vercel.app"
 ]
 
 frontend_url = os.getenv("FRONTEND_URL")
