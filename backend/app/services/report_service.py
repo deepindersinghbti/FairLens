@@ -5,7 +5,8 @@ from typing import Any
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import json
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 
@@ -157,6 +158,103 @@ class ReportService:
         story.append(Paragraph("9. Recommended Actions", styles["Heading2"]))
         for recommendation in analysis.get("recommendations") or ["Continue monitoring fairness as more data becomes available"]:
             story.append(Paragraph(f"- {recommendation}", styles["BodyText"]))
+
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("10. AI Fairness Insights", styles["Heading2"]))
+        ai_insights = analysis.get("ai_fairness_insights")
+        ai_source = analysis.get("ai_insights_source")
+        ai_warning = analysis.get("ai_insights_warning")
+
+        # Display source and any warning text first (defensive)
+        if ai_source:
+            story.append(Paragraph(f"Source: {ai_source}", styles["BodyText"]))
+            story.append(Spacer(1, 6))
+
+        if ai_warning:
+            story.append(Paragraph(f"AI Insights Warning: {ai_warning}", styles["BodyText"]))
+            story.append(Spacer(1, 6))
+
+        # Normalize ai_insights: it may be a dict, a JSON string, a list, or plain text
+        ai_obj = None
+        if isinstance(ai_insights, dict):
+            ai_obj = ai_insights
+        elif isinstance(ai_insights, str):
+            # Try to parse JSON-like strings into an object
+            s = ai_insights.strip()
+            if s.startswith("{") or s.startswith("["):
+                try:
+                    ai_obj = json.loads(s)
+                except Exception:
+                    ai_obj = None
+            else:
+                ai_obj = None
+        else:
+            ai_obj = None
+
+        # If we have a structured AI object, render subsections mirroring the UI
+        if isinstance(ai_obj, dict):
+            summary = ai_obj.get("summary")
+            risk_level = ai_obj.get("risk_level") or ai_obj.get("risk")
+            issues = ai_obj.get("issues") or ai_obj.get("key_issues")
+            recommendations = ai_obj.get("recommendations") or ai_obj.get("recommended_actions")
+
+            if summary:
+                story.append(Paragraph("Summary", styles["Heading3"]))
+                for line in str(summary).splitlines():
+                    if line.strip():
+                        story.append(Paragraph(line.strip(), styles["BodyText"]))
+                story.append(Spacer(1, 6))
+
+            if risk_level:
+                # badge-like styling for risk level
+                rl = str(risk_level)
+                color_map = {
+                    "High": colors.red,
+                    "High Risk": colors.red,
+                    "Moderate": colors.orange if hasattr(colors, "orange") else colors.HexColor("#FFA500"),
+                    "Moderate Risk": colors.orange if hasattr(colors, "orange") else colors.HexColor("#FFA500"),
+                    "Low": colors.green,
+                    "Low Risk": colors.green,
+                }
+                bg = color_map.get(rl, colors.grey)
+                risk_style = ParagraphStyle(
+                    "RiskStyle",
+                    parent=styles["BodyText"],
+                    backColor=bg,
+                    textColor=colors.white,
+                    leftIndent=4,
+                    rightIndent=4,
+                )
+                story.append(Paragraph(f"Risk Level: {rl}", risk_style))
+                story.append(Spacer(1, 6))
+
+            if isinstance(issues, list) and issues:
+                story.append(Paragraph("Key Issues", styles["Heading3"]))
+                for issue in issues:
+                    # defensive: skip null items
+                    if not issue:
+                        continue
+                    story.append(Paragraph(f"\u2022 {issue}", styles["BodyText"]))
+                story.append(Spacer(1, 6))
+
+            if isinstance(recommendations, list) and recommendations:
+                story.append(Paragraph("Recommendations", styles["Heading3"]))
+                for rec in recommendations:
+                    if not rec:
+                        continue
+                    story.append(Paragraph(f"\u2022 {rec}", styles["BodyText"]))
+                story.append(Spacer(1, 6))
+        else:
+            # Fallback: if ai_insights is a list, render each; if it's a plain string, render paragraphs
+            if isinstance(ai_insights, list):
+                for item in ai_insights:
+                    story.append(Paragraph(f"\u2022 {item}", styles["BodyText"]))
+            elif isinstance(ai_insights, str) and ai_insights.strip():
+                for line in ai_insights.splitlines():
+                    if line.strip():
+                        story.append(Paragraph(line.strip(), styles["BodyText"]))
+            else:
+                story.append(Paragraph("No AI-generated insights available.", styles["BodyText"]))
 
         document.build(story)
         pdf_bytes = buffer.getvalue()
