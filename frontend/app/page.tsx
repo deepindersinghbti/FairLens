@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnalysisControls } from "@/components/AnalysisControls";
 import { AnalysisResults } from "@/components/AnalysisResults";
 import { CSVUpload } from "@/components/CSVUpload";
 import { DatasetPreview } from "@/components/DatasetPreview";
+import { LoadingMessage } from "@/components/LoadingMessage";
 import {
   analyzeBias,
   uploadDataset,
@@ -27,6 +28,38 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
+  const [showSlowRequest, setShowSlowRequest] = useState(false);
+
+  // Ref to store timer ID for cleanup
+  const slowRequestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Derived boolean: true if any loading operation is in progress
+  const isAnyLoading = isLoadingDemo || isUploading || isAnalyzing;
+
+  // Unified loading state: show "waking up server" message after 2.5 seconds
+  useEffect(() => {
+    // If loading started, set a timer to show slow request message
+    if (isAnyLoading) {
+      slowRequestTimerRef.current = setTimeout(() => {
+        setShowSlowRequest(true);
+      }, 2500); // 2.5 seconds
+    } else {
+      // If loading stopped, clear timer and hide message
+      if (slowRequestTimerRef.current !== null) {
+        clearTimeout(slowRequestTimerRef.current);
+        slowRequestTimerRef.current = null;
+      }
+      setShowSlowRequest(false);
+    }
+
+    // Cleanup: always clear timer on unmount
+    return () => {
+      if (slowRequestTimerRef.current !== null) {
+        clearTimeout(slowRequestTimerRef.current);
+        slowRequestTimerRef.current = null;
+      }
+    };
+  }, [isAnyLoading]);
 
   const applyLoadedDataset = (
     response: Pick<LoadDemoResponse, "dataset_id" | "columns" | "preview">,
@@ -159,6 +192,11 @@ export default function Home() {
             <p className="text-sm font-semibold">{error}</p>
           </div>
         )}
+
+        <LoadingMessage
+          show={showSlowRequest}
+          message="Waking up the analysis server. This may take a few seconds on the first request."
+        />
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] sm:p-8">
