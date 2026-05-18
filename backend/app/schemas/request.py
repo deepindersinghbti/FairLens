@@ -1,3 +1,5 @@
+from typing import Any, Literal
+
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -38,3 +40,11 @@ class AnalyzeBiasRequest(BaseModel):
                 raise ValueError("Prediction column and sensitive attribute must be different")
 
         return self
+
+
+class SimplifyInsightRequest(BaseModel):
+    metrics: dict[str, Any] = Field(..., description="Compact fairness metrics for the current analysis")
+    normal_insight: str = Field(..., min_length=1)
+    target_column: str = Field(..., min_length=1)
+    sensitive_attribute: str = Field(..., min_length=1)
+    mode: Literal["dataset", "model"]

@@ -327,7 +327,11 @@ export default function Home() {
                 </div>
 
                 <div className="mt-6">
-                  <AnalysisResults result={result} />
+                  <AnalysisResults
+                    result={result}
+                    targetColumn={targetColumn}
+                    sensitiveAttribute={sensitiveAttribute}
+                  />
                 </div>
               </div>
             )}

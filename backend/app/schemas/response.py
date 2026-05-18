@@ -54,3 +54,7 @@ class LoadDemoResponse(BaseModel):
     suggested_target: str
     suggested_sensitive: str
     suggested_prediction: str | None = None
+
+
+class SimplifyInsightResponse(BaseModel):
+    simple_explanation: str
