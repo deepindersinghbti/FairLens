@@ -1,8 +1,16 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  color-scheme: light;
+}
+
+html.dark {
+  --background: #020617;
+  --foreground: #f1f5f9;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -22,6 +30,12 @@ body {
     radial-gradient(circle at top right, rgba(15, 23, 42, 0.04), transparent 24%);
 }
 
+html.dark body {
+  background-image:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 30%),
+    radial-gradient(circle at top right, rgba(148, 163, 184, 0.06), transparent 24%);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -29,6 +43,11 @@ body {
 ::selection {
   background: rgba(15, 23, 42, 0.12);
   color: #0f172a;
+}
+
+html.dark ::selection {
+  background: rgba(148, 163, 184, 0.25);
+  color: #f8fafc;
 }
 
 :focus-visible {

@@ -15,13 +15,13 @@ export const LoadingMessage: React.FC<LoadingMessageProps> = ({ show, message })
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            className="rounded-2xl border border-slate-200 bg-blue-50 px-4 py-3 shadow-sm"
+            className="rounded-2xl border border-slate-200 bg-blue-50 px-4 py-3 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/40"
         >
             <div className="flex items-center gap-3">
                 {/* Animated spinner */}
                 <div className="flex-shrink-0">
                     <svg
-                        className="animate-spin h-5 w-5 text-blue-600"
+                        className="animate-spin h-5 w-5 text-blue-600 dark:text-blue-300"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -43,7 +43,7 @@ export const LoadingMessage: React.FC<LoadingMessageProps> = ({ show, message })
                 </div>
 
                 {/* Message text */}
-                <p className="text-sm font-medium text-blue-800">{message}</p>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">{message}</p>
             </div>
         </div>
     );
