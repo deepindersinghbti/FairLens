@@ -53,6 +53,18 @@ export interface AnalysisResult {
     ai_insights_warning?: string | null;
 }
 
+export interface SimplifyInsightRequest {
+    metrics: Record<string, unknown>;
+    normal_insight: string;
+    target_column: string;
+    sensitive_attribute: string;
+    mode: "dataset" | "model";
+}
+
+export interface SimplifyInsightResponse {
+    simple_explanation: string;
+}
+
 export async function uploadDataset(file: File): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
@@ -123,6 +135,21 @@ export async function downloadFairnessReport(
     }
 
     return response.blob();
+}
+
+export async function simplifyInsight(payload: SimplifyInsightRequest): Promise<SimplifyInsightResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/insights/simplify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to simplify explanation");
+    }
+
+    return response.json();
 }
 
 export async function loadDemoDataset(type: "loan" | "prediction"): Promise<LoadDemoResponse> {

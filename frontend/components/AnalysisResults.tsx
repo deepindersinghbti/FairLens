@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -12,7 +13,7 @@ import {
     LabelList,
     ResponsiveContainer,
 } from "recharts";
-import { AnalysisResult } from "@/lib/api";
+import { AnalysisResult, simplifyInsight } from "@/lib/api";
 import {
     chartEdgeMessages,
     formatPercent,
@@ -22,6 +23,8 @@ import {
 
 interface AnalysisResultsProps {
     result: AnalysisResult;
+    targetColumn: string;
+    sensitiveAttribute: string;
 }
 
 interface TooltipPayload {
@@ -57,7 +60,17 @@ function CustomSelectionTooltip({ active, payload }: ChartTooltipProps) {
     );
 }
 
-export function AnalysisResults({ result }: AnalysisResultsProps) {
+export function AnalysisResults({ result, targetColumn, sensitiveAttribute }: AnalysisResultsProps) {
+    const [simpleExplanation, setSimpleExplanation] = useState("");
+    const [simpleExplanationError, setSimpleExplanationError] = useState("");
+    const [isSimplifying, setIsSimplifying] = useState(false);
+
+    useEffect(() => {
+        setSimpleExplanation("");
+        setSimpleExplanationError("");
+        setIsSimplifying(false);
+    }, [result, targetColumn, sensitiveAttribute]);
+
     const confidenceScore = result.confidence_score ?? 0;
     const confidenceValue = Math.round(confidenceScore);
     const confidenceExplanation = result.confidence_explanation ?? [];
@@ -123,6 +136,56 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
         High: "bg-red-50 border-red-200 text-red-800",
     };
     const aiRiskClass = aiInsights ? aiRiskStyle[aiInsights.risk_level] ?? aiRiskStyle.High : "";
+
+    const normalInsight = aiInsights
+        ? [
+            aiInsights.summary,
+            aiInsights.issues.length ? `Key issues: ${aiInsights.issues.join(" ")}` : "",
+            aiInsights.recommendations.length ? `Recommendations: ${aiInsights.recommendations.join(" ")}` : "",
+        ].filter(Boolean).join("\n\n")
+        : "AI insights could not be generated for this run.";
+
+    const compactMetrics = {
+        analysis_type: result.analysis_type,
+        fairness_score: result.fairness_score,
+        fairness_risk_level: result.fairness_risk_level,
+        bias_detected: result.bias_detected,
+        demographic_parity_difference: result.demographic_parity_difference,
+        disparate_impact: result.disparate_impact,
+        selection_rates: result.selection_rates,
+        selection_counts: result.selection_counts,
+        false_positive_rates: result.false_positive_rates ?? null,
+        equal_opportunity_difference: result.equal_opportunity_difference ?? null,
+        most_affected_group: result.most_affected_group,
+        impact_gap_percentage: result.impact_gap_percentage,
+        target_column: targetColumn,
+        sensitive_attribute: sensitiveAttribute,
+    };
+
+    const handleSimplifyInsight = async () => {
+        if (isSimplifying || simpleExplanation) {
+            return;
+        }
+
+        setIsSimplifying(true);
+        setSimpleExplanationError("");
+        try {
+            const response = await simplifyInsight({
+                metrics: compactMetrics,
+                normal_insight: normalInsight,
+                target_column: targetColumn,
+                sensitive_attribute: sensitiveAttribute,
+                mode: result.analysis_type === "model_prediction" ? "model" : "dataset",
+            });
+            setSimpleExplanation(response.simple_explanation);
+        } catch {
+            setSimpleExplanationError(
+                "We could not simplify this explanation right now. The original AI insight above is still available."
+            );
+        } finally {
+            setIsSimplifying(false);
+        }
+    };
 
     return (
         <div className="w-full space-y-6">
@@ -430,7 +493,37 @@ export function AnalysisResults({ result }: AnalysisResultsProps) {
                 ) : (
                     <p className="mt-2 text-sm text-slate-600">AI insights could not be generated for this run. Review the metric-based insights above.</p>
                 )}
+                <div className="mt-5 border-t border-slate-200 pt-4">
+                    <button
+                        type="button"
+                        onClick={handleSimplifyInsight}
+                        disabled={isSimplifying || Boolean(simpleExplanation)}
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                        {simpleExplanation ? "Simplified explanation ready" : "Explain like I'm 15"}
+                    </button>
+                    {isSimplifying && (
+                        <p className="mt-3 text-sm font-medium text-slate-600">Simplifying explanation...</p>
+                    )}
+                </div>
             </div>
+
+            {(simpleExplanation || simpleExplanationError) && (
+                <div className={panelClass}>
+                    <h4 className="text-lg font-semibold text-slate-950">Explain like I&apos;m 15</h4>
+                    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
+                        {simpleExplanation ? (
+                            <div className="prose prose-sm max-w-none">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {simpleExplanation}
+                                </ReactMarkdown>
+                            </div>
+                        ) : (
+                            <p>{simpleExplanationError}</p>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

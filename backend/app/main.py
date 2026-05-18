@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.analysis import router as analysis_router
 from app.routes.demo import router as demo_router
+from app.routes.insights import router as insights_router
 from app.routes.report import router as report_router
 from app.routes.upload import router as upload_router
 
@@ -39,6 +40,7 @@ async def health() -> dict[str, str]:
 api = FastAPI()
 api.include_router(upload_router)
 api.include_router(analysis_router)
+api.include_router(insights_router)
 api.include_router(report_router)
 api.include_router(demo_router)
 
