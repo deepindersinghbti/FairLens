@@ -79,12 +79,12 @@ export function CSVUpload({ onUpload, isLoading }: CSVUploadProps) {
             onDrop={handleDrop}
             className={`group w-full rounded-2xl border-2 border-dashed p-6 transition-all duration-200 sm:p-8 ${
                 isDragging
-                    ? "border-blue-400 bg-blue-50 shadow-[0_0_0_4px_rgba(59,130,246,0.08)]"
-                    : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white"
+                    ? "border-blue-400 bg-blue-50 shadow-[0_0_0_4px_rgba(59,130,246,0.08)] dark:border-blue-500 dark:bg-blue-950/30 dark:shadow-[0_0_0_4px_rgba(59,130,246,0.16)]"
+                    : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white dark:border-slate-800 dark:bg-slate-950/50 dark:hover:border-slate-700 dark:hover:bg-slate-900"
             }`}
         >
             <div className="flex flex-col items-center gap-4 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                     <svg
                         className="h-7 w-7"
                         fill="none"
@@ -100,10 +100,10 @@ export function CSVUpload({ onUpload, isLoading }: CSVUploadProps) {
                     </svg>
                 </div>
                 <div className="space-y-2">
-                    <p className="text-base font-semibold text-slate-900">
+                    <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
                         {isLoading ? "Uploading CSV..." : "Upload a CSV dataset"}
                     </p>
-                    <p className="max-w-sm text-sm leading-6 text-slate-600">
+                    <p className="max-w-sm text-sm leading-6 text-slate-600 dark:text-slate-400">
                         Drag and drop your file here, or browse to open a CSV from your device.
                     </p>
                 </div>
@@ -111,11 +111,11 @@ export function CSVUpload({ onUpload, isLoading }: CSVUploadProps) {
                     type="button"
                     onClick={openFilePicker}
                     disabled={isLoading}
-                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
                 >
                     {isLoading ? "Uploading..." : "Browse CSV"}
                 </button>
-                <p className="text-xs text-slate-500">CSV files only</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">CSV files only</p>
             </div>
             <input
                 ref={fileInputRef}

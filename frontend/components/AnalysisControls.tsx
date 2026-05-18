@@ -38,25 +38,25 @@ export function AnalysisControls({
     return (
         <div className="w-full space-y-5">
             <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-slate-950">Analysis configuration</h3>
-                <p className="text-sm leading-6 text-slate-600">
+                <h3 className="text-lg font-semibold text-slate-950 dark:text-slate-100">Analysis configuration</h3>
+                <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
                     Select the outcome and protected attribute to define the fairness audit.
                 </p>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
                     Mode: {mode === "model" ? "Model Fairness" : "Dataset Bias"}
                 </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         Target Column (Outcome)
                     </label>
                     <select
                         value={targetColumn}
                         onChange={(e) => onTargetChange(e.target.value)}
                         disabled={isLoading}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
                     >
                         <option value="">Select target column</option>
                         {columns.map((col) => (
@@ -68,14 +68,14 @@ export function AnalysisControls({
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         Sensitive Attribute
                     </label>
                     <select
                         value={sensitiveAttribute}
                         onChange={(e) => onSensitiveChange(e.target.value)}
                         disabled={isLoading}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
                     >
                         <option value="">Select sensitive attribute</option>
                         {columns.map((col) => (
@@ -87,14 +87,14 @@ export function AnalysisControls({
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         Prediction Column (Optional)
                     </label>
                     <select
                         value={predictionColumn}
                         onChange={(e) => onPredictionChange(e.target.value)}
                         disabled={isLoading}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
                     >
                         <option value="">None (Dataset Bias Analysis)</option>
                         {columns
@@ -109,19 +109,19 @@ export function AnalysisControls({
             </div>
 
             {invalidTargetSensitive && (
-                <p className="text-sm font-medium text-amber-700">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                     Choose different columns for the outcome and sensitive attribute.
                 </p>
             )}
 
             {invalidPredictionTarget && (
-                <p className="text-sm font-medium text-amber-700">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                     Prediction column and target column must be different.
                 </p>
             )}
 
             {invalidPredictionSensitive && (
-                <p className="text-sm font-medium text-amber-700">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                     Prediction column and sensitive attribute must be different.
                 </p>
             )}
@@ -129,7 +129,7 @@ export function AnalysisControls({
             <button
                 onClick={onAnalyze}
                 disabled={!isValid || isLoading}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
             >
                 {isLoading ? "Analyzing..." : "Run Bias Analysis"}
             </button>
