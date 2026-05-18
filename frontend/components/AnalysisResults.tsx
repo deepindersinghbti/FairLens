@@ -48,24 +48,26 @@ interface ChartTooltipProps {
 
 const chartTheme = {
     light: {
-        axis: "#64748b",
+        axis: "#475569",
         axisLine: "#cbd5e1",
         grid: "#e2e8f0",
-        label: "#475569",
+        label: "#334155",
         tooltipBg: "#ffffff",
         tooltipBorder: "#cbd5e1",
         tooltipMuted: "#475569",
         tooltipText: "#0f172a",
+        cursor: "rgba(15, 23, 42, 0.06)",
     },
     dark: {
         axis: "#94a3b8",
         axisLine: "#334155",
         grid: "#1e293b",
-        label: "#cbd5e1",
+        label: "#e2e8f0",
         tooltipBg: "#0f172a",
         tooltipBorder: "#334155",
         tooltipMuted: "#cbd5e1",
-        tooltipText: "#f1f5f9",
+        tooltipText: "#f8fafc",
+        cursor: "rgba(148, 163, 184, 0.08)",
     },
 } satisfies Record<ResolvedTheme, Record<string, string>>;
 
@@ -395,7 +397,10 @@ export function AnalysisResults({ result, targetColumn, sensitiveAttribute }: An
                                     tickLine={{ stroke: colors.axisLine }}
                                     label={{ value: "Selection Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
                                 />
-                                <Tooltip content={<CustomSelectionTooltip resolvedTheme={resolvedTheme} />} />
+                                <Tooltip
+                                    cursor={{ fill: colors.cursor }}
+                                    content={<CustomSelectionTooltip resolvedTheme={resolvedTheme} />}
+                                />
                                 <Bar dataKey="selectionRate" fill="#1d4ed8" name="Selection Rate" radius={[8, 8, 0, 0]}>
                                     <LabelList dataKey="selectionRate" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
                                 </Bar>
@@ -425,7 +430,10 @@ export function AnalysisResults({ result, targetColumn, sensitiveAttribute }: An
                                             tickLine={{ stroke: colors.axisLine }}
                                             label={{ value: "False Positive Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
                                         />
-                                        <Tooltip content={<CustomRateTooltip resolvedTheme={resolvedTheme} />} />
+                                        <Tooltip
+                                            cursor={{ fill: colors.cursor }}
+                                            content={<CustomRateTooltip resolvedTheme={resolvedTheme} />}
+                                        />
                                         <Bar dataKey="falsePositiveRate" fill="#ea580c" name="False Positive Rate" radius={[8, 8, 0, 0]}>
                                             <LabelList dataKey="falsePositiveRate" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
                                         </Bar>
