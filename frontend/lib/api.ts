@@ -28,6 +28,7 @@ export interface AIFairnessInsights {
 }
 
 export interface AnalysisResult {
+    analysis_id: string;  // Unique identifier for retrieving report
     analysis_type: "dataset" | "model_prediction";
     selection_rates: Record<string, number>;
     selection_counts: Record<string, GroupSelectionCount>;
@@ -331,6 +332,81 @@ export async function loadDemoDataset(type: "loan" | "prediction"): Promise<Load
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || "Failed to load demo dataset");
+    }
+
+    return response.json();
+}
+
+// Report Payload Types (for professional audit report page)
+export interface ReportSelectionData {
+    group: string;
+    rate: number;
+    selected: number;
+    total: number;
+}
+
+export interface ReportMetrics {
+    demographic_parity_difference: number;
+    disparate_impact: number;
+    equal_opportunity_difference?: number | null;
+}
+
+export interface ReportMitigationData {
+    strength_id: string;
+    strength_label: string;
+    rows_adjusted: number;
+    rows_eligible: number;
+    adjustment_cap_applied: boolean;
+    target_rate_ceiling_applied: boolean;
+    fairness_improvement_estimate: number;
+    before_fairness_score: number;
+    after_fairness_score: number;
+    before_selection_rates: Record<string, number>;
+    after_selection_rates: Record<string, number>;
+}
+
+export interface ReportAIInsights {
+    summary: string;
+    risk_level: string;
+    issues: string[];
+    recommendations: string[];
+}
+
+export interface ReportPayload {
+    analysis_id: string;
+    generated_at: string;
+    dataset_name: string;
+    target_column: string;
+    sensitive_attribute: string;
+    analysis_type: string;
+    fairness_score: number;
+    fairness_risk_level: string;
+    most_affected_group: string;
+    impact_gap_percentage: number;
+    bias_detected: boolean;
+    fairness_metrics: ReportMetrics;
+    selection_data: ReportSelectionData[];
+    confidence_score?: number;
+    confidence_explanation?: string[];
+    data_quality_label?: string;
+    key_findings: string[];
+    plain_language_summary: string;
+    chart_data: Record<string, unknown>;
+    warnings: string[];
+    recommendations: string[];
+    mitigation_data?: ReportMitigationData;
+    ai_insights?: ReportAIInsights;
+    ai_insights_source?: string;
+    ai_insights_disclaimer: string;
+    report_disclaimer: string;
+}
+
+export async function getReportData(analysisId: string): Promise<ReportPayload> {
+    const response = await fetch(`${API_BASE_URL}/api/report-data/${encodeURIComponent(analysisId)}`);
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to load report data");
     }
 
     return response.json();

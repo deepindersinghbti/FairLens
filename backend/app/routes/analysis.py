@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.request import AnalyzeBiasRequest
 from app.schemas.response import AnalyzeBiasResponse, GroupSelectionCount
 from app.services.ai_service import generate_ai_insights_with_status
-from app.services.analysis_store import save_analysis_result
+from app.services.analysis_store import save_analysis_result, save_analysis_with_id
 from app.services.bias_service import BiasService
 from app.services.dataset_service import DatasetService
 
@@ -32,10 +32,15 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
         analysis["ai_insights_source"] = ai_source
         analysis["ai_insights_warning"] = ai_warning
 
+        # Save to legacy cache for backward compatibility
         save_analysis_result(payload.dataset_id,
                              analysis["analysis_type"], analysis)
+        
+        # Save with new ID-based system and get analysis_id
+        analysis_id = save_analysis_with_id(analysis)
 
         return AnalyzeBiasResponse(
+            analysis_id=analysis_id,
             analysis_type=analysis["analysis_type"],
             selection_rates=analysis["selection_rates"],
             selection_counts={

@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from app.services.analysis_store import get_analysis_result
+from app.schemas.report_payload import ReportPayload
+from app.services.analysis_store import get_analysis_result, get_analysis_by_id
 from app.services.report_service import ReportService
+from app.services.report_payload_builder import ReportPayloadBuilder
 
 
 router = APIRouter()
@@ -10,6 +12,7 @@ router = APIRouter()
 
 @router.get("/generate-report")
 async def generate_report(dataset_id: str, analysis_type: str) -> Response:
+    """Legacy endpoint: Generate PDF from analysis results (keyed by dataset_id + analysis_type)."""
     analysis = get_analysis_result(dataset_id, analysis_type)
     if analysis is None:
         raise HTTPException(
@@ -24,3 +27,37 @@ async def generate_report(dataset_id: str, analysis_type: str) -> Response:
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="fairlens_audit_report.pdf"'},
     )
+
+
+@router.get("/report-data/{analysis_id}", response_model=ReportPayload)
+async def get_report_data(analysis_id: str) -> ReportPayload:
+    """
+    New endpoint: Get structured report payload for professional audit report rendering.
+    
+    This endpoint returns complete, deterministic report data suitable for the
+    dedicated report page. Data is returned in light mode for professional display.
+    """
+    analysis = get_analysis_by_id(analysis_id)
+    if analysis is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Analysis session not found or expired. "
+                "Analysis sessions are available for 24 hours. "
+                "Please run a new analysis to generate a fresh report."
+            ),
+        )
+
+    # Build the professional report payload
+    dataset_name = analysis.get("dataset_name", "Unknown Dataset")
+    mitigation_data = analysis.get("mitigation_data")  # Optional
+    
+    report_payload = ReportPayloadBuilder.build_report_payload(
+        analysis_id=analysis_id,
+        analysis=analysis,
+        dataset_name=dataset_name,
+        mitigation_data=mitigation_data,
+    )
+    
+    return report_payload
+
