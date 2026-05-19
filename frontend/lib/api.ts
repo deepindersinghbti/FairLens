@@ -53,6 +53,32 @@ export interface AnalysisResult {
     ai_insights_warning?: string | null;
 }
 
+export interface MitigationMethod {
+    id: "deterministic_rebalancing" | string;
+    label: string;
+}
+
+export interface MitigationMetadata {
+    rowsAdjusted: number;
+    adjustmentCapApplied: boolean;
+    fairnessImprovementEstimate: number;
+    method: MitigationMethod;
+}
+
+export interface MitigationComparison {
+    before: AnalysisResult;
+    after: AnalysisResult;
+}
+
+export interface ApplyMitigationResponse {
+    original_dataset_id: string;
+    adjusted_dataset_id: string;
+    columns: string[];
+    preview: Record<string, unknown>[];
+    metadata: MitigationMetadata;
+    comparison: MitigationComparison;
+}
+
 export interface SimplifyInsightRequest {
     metrics: Record<string, unknown>;
     normal_insight: string;
@@ -150,6 +176,58 @@ export async function simplifyInsight(payload: SimplifyInsightRequest): Promise<
     }
 
     return response.json();
+}
+
+export async function applyMitigation(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string
+): Promise<ApplyMitigationResponse> {
+    const normalizedPrediction = (predictionColumn ?? "").trim();
+    const predictionForPayload = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
+        ? undefined
+        : normalizedPrediction;
+
+    const payload: {
+        dataset_id: string;
+        target_column: string;
+        sensitive_attribute: string;
+        prediction_column?: string;
+    } = {
+        dataset_id: datasetId,
+        target_column: targetColumn,
+        sensitive_attribute: sensitiveAttribute,
+    };
+
+    if (predictionForPayload) {
+        payload.prediction_column = predictionForPayload;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/apply-mitigation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Mitigation failed");
+    }
+
+    return response.json();
+}
+
+export async function downloadDataset(datasetId: string): Promise<Blob> {
+    const url = `${API_BASE_URL}/api/download-dataset?dataset_id=${encodeURIComponent(datasetId)}`;
+    const response = await fetch(url, { method: "GET" });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Dataset download failed");
+    }
+
+    return response.blob();
 }
 
 export async function loadDemoDataset(type: "loan" | "prediction"): Promise<LoadDemoResponse> {

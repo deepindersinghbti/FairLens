@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from app.schemas.response import UploadDatasetResponse
 from app.services.dataset_service import DatasetService
@@ -32,3 +33,16 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadDatasetResponse:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to upload dataset: {exc}") from exc
+
+
+@router.get("/download-dataset")
+async def download_dataset(dataset_id: str) -> FileResponse:
+    try:
+        dataset_path = dataset_service.path_from_dataset_id(dataset_id)
+        return FileResponse(
+            path=dataset_path,
+            media_type="text/csv",
+            filename="fairlens_fairness_adjusted_dataset.csv",
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

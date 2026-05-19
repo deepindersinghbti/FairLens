@@ -48,3 +48,7 @@ class SimplifyInsightRequest(BaseModel):
     target_column: str = Field(..., min_length=1)
     sensitive_attribute: str = Field(..., min_length=1)
     mode: Literal["dataset", "model"]
+
+
+class ApplyMitigationRequest(AnalyzeBiasRequest):
+    pass

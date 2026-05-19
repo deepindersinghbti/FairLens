@@ -58,3 +58,24 @@ class LoadDemoResponse(BaseModel):
 
 class SimplifyInsightResponse(BaseModel):
     simple_explanation: str
+
+
+class MitigationMethod(BaseModel):
+    id: str
+    label: str
+
+
+class MitigationMetadata(BaseModel):
+    rowsAdjusted: int
+    adjustmentCapApplied: bool
+    fairnessImprovementEstimate: float
+    method: MitigationMethod
+
+
+class MitigationComparisonResponse(BaseModel):
+    original_dataset_id: str
+    adjusted_dataset_id: str
+    columns: List[str]
+    preview: List[Dict[str, Any]]
+    metadata: MitigationMetadata
+    comparison: Dict[str, AnalyzeBiasResponse]
