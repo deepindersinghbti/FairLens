@@ -59,10 +59,19 @@ export interface MitigationMethod {
 }
 
 export interface MitigationMetadata {
+    rowsEligible: number;
     rowsAdjusted: number;
     adjustmentCapApplied: boolean;
+    targetRateCeilingApplied: boolean;
     fairnessImprovementEstimate: number;
     method: MitigationMethod;
+    strength: {
+        id: MitigationStrength;
+        label: string;
+        description: string;
+        adjustmentCap: number;
+        targetShare: number;
+    };
 }
 
 export interface MitigationComparison {
@@ -78,6 +87,8 @@ export interface ApplyMitigationResponse {
     metadata: MitigationMetadata;
     comparison: MitigationComparison;
 }
+
+export type MitigationStrength = "conservative" | "balanced" | "aggressive";
 
 export interface SimplifyInsightRequest {
     metrics: Record<string, unknown>;
@@ -182,7 +193,8 @@ export async function applyMitigation(
     datasetId: string,
     targetColumn: string,
     sensitiveAttribute: string,
-    predictionColumn?: string
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced"
 ): Promise<ApplyMitigationResponse> {
     const normalizedPrediction = (predictionColumn ?? "").trim();
     const predictionForPayload = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
@@ -194,10 +206,12 @@ export async function applyMitigation(
         target_column: string;
         sensitive_attribute: string;
         prediction_column?: string;
+        strength: MitigationStrength;
     } = {
         dataset_id: datasetId,
         target_column: targetColumn,
         sensitive_attribute: sensitiveAttribute,
+        strength,
     };
 
     if (predictionForPayload) {

@@ -14,6 +14,7 @@ import {
   uploadDataset,
   AnalysisResult,
   ApplyMitigationResponse,
+  MitigationStrength,
   downloadFairnessReport,
   loadDemoDataset,
   LoadDemoResponse,
@@ -28,6 +29,7 @@ export default function Home() {
   const [predictionColumn, setPredictionColumn] = useState<string>("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [mitigationResult, setMitigationResult] = useState<ApplyMitigationResponse | null>(null);
+  const [mitigationStrength, setMitigationStrength] = useState<MitigationStrength>("balanced");
   const [error, setError] = useState<string>("");
   const [mitigationError, setMitigationError] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
@@ -167,7 +169,8 @@ export default function Home() {
         datasetId,
         targetColumn,
         sensitiveAttribute,
-        predictionForRequest
+        predictionForRequest,
+        mitigationStrength
       );
       setMitigationResult(response);
     } catch (err) {
@@ -175,6 +178,12 @@ export default function Home() {
     } finally {
       setIsApplyingMitigation(false);
     }
+  };
+
+  const handleMitigationStrengthChange = (strength: MitigationStrength) => {
+    setMitigationStrength(strength);
+    setMitigationResult(null);
+    setMitigationError("");
   };
 
   const handleDownloadReport = async () => {
@@ -384,10 +393,13 @@ export default function Home() {
                 </div>
 
                 <MitigationPanel
+                  analysisResult={result}
                   mitigationResult={mitigationResult}
                   error={mitigationError}
                   isApplying={isApplyingMitigation}
                   isDisabled={isAnyLoading}
+                  strength={mitigationStrength}
+                  onStrengthChange={handleMitigationStrengthChange}
                   onApply={handleApplyMitigation}
                 />
               </div>

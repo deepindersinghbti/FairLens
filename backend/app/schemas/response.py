@@ -66,10 +66,13 @@ class MitigationMethod(BaseModel):
 
 
 class MitigationMetadata(BaseModel):
+    rowsEligible: int
     rowsAdjusted: int
     adjustmentCapApplied: bool
+    targetRateCeilingApplied: bool
     fairnessImprovementEstimate: float
     method: MitigationMethod
+    strength: Dict[str, Any]
 
 
 class MitigationComparisonResponse(BaseModel):

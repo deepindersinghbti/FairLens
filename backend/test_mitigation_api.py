@@ -31,6 +31,7 @@ def test_apply_mitigation_and_download_adjusted_csv():
             "dataset_id": dataset_id,
             "target_column": "approved",
             "sensitive_attribute": "gender",
+            "strength": "balanced",
         },
     )
     assert mitigation_response.status_code == 200
@@ -42,7 +43,10 @@ def test_apply_mitigation_and_download_adjusted_csv():
         "id": "deterministic_rebalancing",
         "label": "Deterministic Rebalancing",
     }
-    assert payload["metadata"]["rowsAdjusted"] == 1
+    assert payload["metadata"]["strength"]["id"] == "balanced"
+    assert payload["metadata"]["rowsEligible"] == 4
+    assert payload["metadata"]["rowsAdjusted"] == 3
+    assert payload["metadata"]["targetRateCeilingApplied"] is False
     assert payload["comparison"]["after"]["fairness_score"] >= payload["comparison"]["before"]["fairness_score"]
 
     download_response = client.get(

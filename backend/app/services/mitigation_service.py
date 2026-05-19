@@ -10,9 +10,16 @@ from app.services.bias_service import BiasService
 
 @dataclass(frozen=True)
 class MitigationMetadata:
+    rows_eligible: int
     rows_adjusted: int
     adjustment_cap_applied: bool
+    target_rate_ceiling_applied: bool
     fairness_improvement_estimate: float
+    strength_id: str
+    strength_label: str
+    strength_description: str
+    strength_adjustment_cap: float
+    strength_target_share: float
     method_id: str = "deterministic_rebalancing"
     method_label: str = "Deterministic Rebalancing"
 
@@ -27,7 +34,43 @@ class MitigationResult:
 
 
 class MitigationService:
-    DEFAULT_GROUP_ADJUSTMENT_CAP = 0.15
+    DEFAULT_STRENGTH = "balanced"
+    STRENGTH_CONFIGS = {
+        "conservative": {
+            "label": "Conservative",
+            "description": "Minimal adjustments",
+            "adjustment_cap": 0.10,
+            "target_share": 0.35,
+        },
+        "balanced": {
+            "label": "Balanced",
+            "description": "Moderate fairness improvement",
+            "adjustment_cap": 0.30,
+            "target_share": 0.65,
+        },
+        "aggressive": {
+            "label": "Aggressive",
+            "description": "Maximum fairness improvement",
+            "adjustment_cap": 0.50,
+            "target_share": 1.0,
+        },
+    }
+
+    @staticmethod
+    def strength_options() -> list[dict[str, float | str]]:
+        return [
+            {"id": strength_id, **config}
+            for strength_id, config in MitigationService.STRENGTH_CONFIGS.items()
+        ]
+
+    @staticmethod
+    def _strength_config(strength: str | None) -> tuple[str, dict[str, float | str]]:
+        normalized = (strength or MitigationService.DEFAULT_STRENGTH).strip().lower()
+        if normalized not in MitigationService.STRENGTH_CONFIGS:
+            allowed = ", ".join(MitigationService.STRENGTH_CONFIGS)
+            raise ValueError(f"Mitigation strength must be one of: {allowed}")
+
+        return normalized, MitigationService.STRENGTH_CONFIGS[normalized]
 
     @staticmethod
     def _resolve_columns(
@@ -58,13 +101,14 @@ class MitigationService:
         target_column: str,
         sensitive_attribute: str,
         prediction_column: str | None = None,
-        group_adjustment_cap: float = DEFAULT_GROUP_ADJUSTMENT_CAP,
+        strength: str | None = DEFAULT_STRENGTH,
     ) -> MitigationResult:
         if dataframe.empty:
             raise ValueError("Uploaded CSV is empty")
 
-        if group_adjustment_cap < 0 or group_adjustment_cap > 1:
-            raise ValueError("Adjustment cap must be between 0 and 1")
+        strength_id, strength_config = MitigationService._strength_config(strength)
+        group_adjustment_cap = float(strength_config["adjustment_cap"])
+        target_share = float(strength_config["target_share"])
 
         resolved_target, resolved_sensitive, resolved_prediction = MitigationService._resolve_columns(
             dataframe=dataframe,
@@ -111,8 +155,14 @@ class MitigationService:
 
         best_rate = max(float(stats["rate"]) for stats in group_stats.values())
         before_gap = best_rate - min(float(stats["rate"]) for stats in group_stats.values())
+        rows_eligible = sum(
+            len(list(stats["eligible_indexes"]))
+            for stats in group_stats.values()
+            if float(stats["rate"]) < best_rate
+        )
         rows_adjusted = 0
         adjustment_cap_applied = False
+        target_rate_ceiling_applied = False
 
         for stats in group_stats.values():
             total = int(stats["total"])
@@ -123,7 +173,14 @@ class MitigationService:
             if total == 0 or current_rate >= best_rate or not eligible_indexes:
                 continue
 
-            desired_selected = math.ceil(best_rate * total)
+            target_rate = current_rate + ((best_rate - current_rate) * target_share)
+            if strength_id == "aggressive" and best_rate > 0.1:
+                max_allowed_target_rate = min(0.9, best_rate - 0.05)
+                if target_rate > max_allowed_target_rate:
+                    target_rate = max_allowed_target_rate
+                    target_rate_ceiling_applied = True
+
+            desired_selected = math.ceil(target_rate * total)
             needed = max(0, desired_selected - selected)
             cap = math.floor(total * group_adjustment_cap)
             allowed = min(needed, cap, len(eligible_indexes))
@@ -150,9 +207,16 @@ class MitigationService:
         return MitigationResult(
             dataframe=adjusted,
             metadata=MitigationMetadata(
+                rows_eligible=rows_eligible,
                 rows_adjusted=rows_adjusted,
                 adjustment_cap_applied=adjustment_cap_applied,
+                target_rate_ceiling_applied=target_rate_ceiling_applied,
                 fairness_improvement_estimate=fairness_improvement_estimate,
+                strength_id=strength_id,
+                strength_label=str(strength_config["label"]),
+                strength_description=str(strength_config["description"]),
+                strength_adjustment_cap=group_adjustment_cap,
+                strength_target_share=target_share,
             ),
             target_column=resolved_target,
             sensitive_attribute=resolved_sensitive,

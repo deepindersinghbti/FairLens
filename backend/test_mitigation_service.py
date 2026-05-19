@@ -22,8 +22,10 @@ def test_mitigation_preserves_original_and_schema():
 
     pd.testing.assert_frame_equal(dataframe, original)
     assert list(result.dataframe.columns) == list(dataframe.columns)
-    assert result.metadata.rows_adjusted == 0
+    assert result.metadata.rows_eligible == 3
+    assert result.metadata.rows_adjusted == 1
     assert result.metadata.adjustment_cap_applied is True
+    assert result.metadata.strength_id == "balanced"
 
 
 def test_mitigation_improves_or_preserves_fairness_score_with_cap():
@@ -39,9 +41,52 @@ def test_mitigation_improves_or_preserves_fairness_score_with_cap():
     after = BiasService.compute_analysis(result.dataframe, "approved", "gender")
 
     assert after["fairness_score"] >= before["fairness_score"]
-    assert result.metadata.rows_adjusted == 1
+    assert result.metadata.rows_adjusted == 3
     assert result.metadata.adjustment_cap_applied is True
     assert result.metadata.fairness_improvement_estimate > 0
+
+
+def test_strength_modes_increase_adjustment_counts():
+    dataframe = pd.DataFrame(
+        {
+            "approved": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            "gender": ["F"] * 10 + ["M"] * 10,
+        }
+    )
+
+    conservative = MitigationService.apply_mitigation(
+        dataframe, "approved", "gender", strength="conservative"
+    )
+    balanced = MitigationService.apply_mitigation(
+        dataframe, "approved", "gender", strength="balanced"
+    )
+    aggressive = MitigationService.apply_mitigation(
+        dataframe, "approved", "gender", strength="aggressive"
+    )
+
+    assert conservative.metadata.rows_adjusted <= balanced.metadata.rows_adjusted
+    assert balanced.metadata.rows_adjusted <= aggressive.metadata.rows_adjusted
+    assert conservative.metadata.rows_adjusted == 1
+    assert balanced.metadata.rows_adjusted == 3
+    assert aggressive.metadata.rows_adjusted == 5
+
+
+def test_aggressive_respects_target_rate_ceiling():
+    dataframe = pd.DataFrame(
+        {
+            "approved": [0] * 20 + [1] * 20,
+            "gender": ["F"] * 20 + ["M"] * 20,
+        }
+    )
+
+    result = MitigationService.apply_mitigation(
+        dataframe, "approved", "gender", strength="aggressive"
+    )
+    analysis = BiasService.compute_analysis(result.dataframe, "approved", "gender")
+
+    assert result.metadata.target_rate_ceiling_applied is True
+    assert result.metadata.rows_adjusted == 10
+    assert analysis["selection_rates"]["F"] == 0.5
 
 
 def test_mitigation_handles_zero_adjustment_without_crashing():
@@ -55,5 +100,6 @@ def test_mitigation_handles_zero_adjustment_without_crashing():
     result = MitigationService.apply_mitigation(dataframe, "approved", "gender")
 
     assert result.metadata.rows_adjusted == 0
+    assert result.metadata.rows_eligible == 0
     assert result.metadata.adjustment_cap_applied is False
     pd.testing.assert_frame_equal(result.dataframe, dataframe)

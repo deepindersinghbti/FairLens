@@ -23,6 +23,7 @@ async def apply_mitigation(payload: ApplyMitigationRequest) -> MitigationCompari
             target_column=payload.target_column,
             sensitive_attribute=payload.sensitive_attribute,
             prediction_column=payload.prediction_column,
+            strength=payload.strength,
         )
         adjusted_dataset_id = dataset_service.save_dataframe(mitigation.dataframe)
 
@@ -45,12 +46,21 @@ async def apply_mitigation(payload: ApplyMitigationRequest) -> MitigationCompari
             columns=[str(column) for column in mitigation.dataframe.columns.tolist()],
             preview=dataset_service.preview_records(mitigation.dataframe),
             metadata={
+                "rowsEligible": mitigation.metadata.rows_eligible,
                 "rowsAdjusted": mitigation.metadata.rows_adjusted,
                 "adjustmentCapApplied": mitigation.metadata.adjustment_cap_applied,
+                "targetRateCeilingApplied": mitigation.metadata.target_rate_ceiling_applied,
                 "fairnessImprovementEstimate": mitigation.metadata.fairness_improvement_estimate,
                 "method": {
                     "id": mitigation.metadata.method_id,
                     "label": mitigation.metadata.method_label,
+                },
+                "strength": {
+                    "id": mitigation.metadata.strength_id,
+                    "label": mitigation.metadata.strength_label,
+                    "description": mitigation.metadata.strength_description,
+                    "adjustmentCap": mitigation.metadata.strength_adjustment_cap,
+                    "targetShare": mitigation.metadata.strength_target_share,
                 },
             },
             comparison={

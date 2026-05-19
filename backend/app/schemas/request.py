@@ -51,4 +51,4 @@ class SimplifyInsightRequest(BaseModel):
 
 
 class ApplyMitigationRequest(AnalyzeBiasRequest):
-    pass
+    strength: Literal["conservative", "balanced", "aggressive"] = Field(default="balanced")
