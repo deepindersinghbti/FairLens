@@ -17,11 +17,21 @@ interface RateTooltipPayload {
 export function SelectionRateComparisonChart({ rows }: SelectionRateComparisonChartProps) {
     const { resolvedTheme } = useTheme();
     const colors = chartTheme[resolvedTheme];
+    // compute maximum value (handle both 0-1 and 0-100 scales)
+    let maxVal = 0;
+    if (rows && rows.length) {
+        maxVal = Math.max(...rows.map((r) => Math.max(Number((r as any).before ?? 0), Number((r as any).after ?? 0))));
+        if (maxVal <= 1) {
+            maxVal = maxVal * 100;
+        }
+    }
+
+    const topMargin = 24 + Math.ceil((maxVal / 100) * 56); // up to ~80px when bars reach 100%
 
     return (
         <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={rows} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
+                <BarChart data={rows} margin={{ top: topMargin, right: 20, left: 20, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
                     <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
                     <YAxis

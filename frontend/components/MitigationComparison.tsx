@@ -251,28 +251,37 @@ export function MitigationComparison({ before, after, metadata }: MitigationComp
                     <h4 className="text-lg font-semibold text-slate-950 dark:text-slate-100">Selection rate by group</h4>
                     <div className="mt-4 h-[320px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={groupRows} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                                <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
-                                <YAxis
-                                    domain={[0, 100]}
-                                    ticks={[0, 20, 40, 60, 80, 100]}
-                                    tick={{ fill: colors.axis, fontSize: 12 }}
-                                    axisLine={{ stroke: colors.axisLine }}
-                                    tickLine={{ stroke: colors.axisLine }}
-                                    label={{ value: "Selection Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
-                                />
-                                <Tooltip
-                                    cursor={{ fill: colors.cursor }}
-                                    content={<RateTooltip resolvedTheme={resolvedTheme} />}
-                                />
-                                <Bar dataKey="before" fill="#64748b" name="Original" radius={[8, 8, 0, 0]}>
-                                    <LabelList dataKey="before" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
-                                </Bar>
-                                <Bar dataKey="after" fill="#2563eb" name="Fairness-Adjusted" radius={[8, 8, 0, 0]}>
-                                    <LabelList dataKey="after" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
-                                </Bar>
-                            </BarChart>
+                            {/* compute top margin so bar labels don't overflow when bars are very tall */}
+                            {(() => {
+                                const maxValRaw = groupRows.length ? Math.max(...groupRows.map((r) => Math.max(r.before, r.after))) : 0;
+                                const maxVal = maxValRaw <= 1 ? maxValRaw * 100 : maxValRaw;
+                                const topMargin = 24 + Math.ceil((maxVal / 100) * 56);
+
+                                return (
+                                    <BarChart data={groupRows} margin={{ top: topMargin, right: 20, left: 20, bottom: 8 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                                        <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
+                                        <YAxis
+                                            domain={[0, 100]}
+                                            ticks={[0, 20, 40, 60, 80, 100]}
+                                            tick={{ fill: colors.axis, fontSize: 12 }}
+                                            axisLine={{ stroke: colors.axisLine }}
+                                            tickLine={{ stroke: colors.axisLine }}
+                                            label={{ value: "Selection Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
+                                        />
+                                        <Tooltip
+                                            cursor={{ fill: colors.cursor }}
+                                            content={<RateTooltip resolvedTheme={resolvedTheme} />}
+                                        />
+                                        <Bar dataKey="before" fill="#64748b" name="Original" radius={[8, 8, 0, 0]}>
+                                            <LabelList dataKey="before" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
+                                        </Bar>
+                                        <Bar dataKey="after" fill="#2563eb" name="Fairness-Adjusted" radius={[8, 8, 0, 0]}>
+                                            <LabelList dataKey="after" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
+                                        </Bar>
+                                    </BarChart>
+                                );
+                            })()}
                         </ResponsiveContainer>
                     </div>
                 </div>

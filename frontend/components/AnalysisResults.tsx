@@ -384,27 +384,35 @@ export function AnalysisResults({ result, targetColumn, sensitiveAttribute }: An
                             ))}
                         </div>
                     )}
-                    <div className="mt-4">
+                        <div className="mt-4">
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={selectionChartData} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                                <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
-                                <YAxis
-                                    domain={[0, 100]}
-                                    ticks={[0, 20, 40, 60, 80, 100]}
-                                    tick={{ fill: colors.axis, fontSize: 12 }}
-                                    axisLine={{ stroke: colors.axisLine }}
-                                    tickLine={{ stroke: colors.axisLine }}
-                                    label={{ value: "Selection Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
-                                />
-                                <Tooltip
-                                    cursor={{ fill: colors.cursor }}
-                                    content={<CustomSelectionTooltip resolvedTheme={resolvedTheme} />}
-                                />
-                                <Bar dataKey="selectionRate" fill="#1d4ed8" name="Selection Rate" radius={[8, 8, 0, 0]}>
-                                    <LabelList dataKey="selectionRate" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
-                                </Bar>
-                            </BarChart>
+                            {(() => {
+                                const maxRaw = selectionChartData.length ? Math.max(...selectionChartData.map((d) => Number((d as any).selectionRate ?? 0))) : 0;
+                                const maxVal = maxRaw <= 1 ? maxRaw * 100 : maxRaw;
+                                const topMargin = 24 + Math.ceil((maxVal / 100) * 56);
+
+                                return (
+                                    <BarChart data={selectionChartData} margin={{ top: topMargin, right: 20, left: 20, bottom: 8 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                                        <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
+                                        <YAxis
+                                            domain={[0, 100]}
+                                            ticks={[0, 20, 40, 60, 80, 100]}
+                                            tick={{ fill: colors.axis, fontSize: 12 }}
+                                            axisLine={{ stroke: colors.axisLine }}
+                                            tickLine={{ stroke: colors.axisLine }}
+                                            label={{ value: "Selection Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
+                                        />
+                                        <Tooltip
+                                            cursor={{ fill: colors.cursor }}
+                                            content={<CustomSelectionTooltip resolvedTheme={resolvedTheme} />}
+                                        />
+                                        <Bar dataKey="selectionRate" fill="#1d4ed8" name="Selection Rate" radius={[8, 8, 0, 0]}>
+                                            <LabelList dataKey="selectionRate" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
+                                        </Bar>
+                                    </BarChart>
+                                );
+                            })()}
                         </ResponsiveContainer>
                     </div>
                 </div>
@@ -419,25 +427,33 @@ export function AnalysisResults({ result, targetColumn, sensitiveAttribute }: An
                                 </div>
                             ) : (
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={modelChartData} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                                        <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
-                                        <YAxis
-                                            domain={[0, 100]}
-                                            ticks={[0, 20, 40, 60, 80, 100]}
-                                            tick={{ fill: colors.axis, fontSize: 12 }}
-                                            axisLine={{ stroke: colors.axisLine }}
-                                            tickLine={{ stroke: colors.axisLine }}
-                                            label={{ value: "False Positive Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
-                                        />
-                                        <Tooltip
-                                            cursor={{ fill: colors.cursor }}
-                                            content={<CustomRateTooltip resolvedTheme={resolvedTheme} />}
-                                        />
-                                        <Bar dataKey="falsePositiveRate" fill="#ea580c" name="False Positive Rate" radius={[8, 8, 0, 0]}>
-                                            <LabelList dataKey="falsePositiveRate" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
-                                        </Bar>
-                                    </BarChart>
+                                    {(() => {
+                                        const maxRaw = modelChartData.length ? Math.max(...modelChartData.map((d) => Number((d as any).falsePositiveRate ?? 0))) : 0;
+                                        const maxVal = maxRaw <= 1 ? maxRaw * 100 : maxRaw;
+                                        const topMargin = 24 + Math.ceil((maxVal / 100) * 56);
+
+                                        return (
+                                            <BarChart data={modelChartData} margin={{ top: topMargin, right: 20, left: 20, bottom: 8 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                                                <XAxis dataKey="group" tick={{ fill: colors.axis, fontSize: 12 }} axisLine={{ stroke: colors.axisLine }} tickLine={{ stroke: colors.axisLine }} />
+                                                <YAxis
+                                                    domain={[0, 100]}
+                                                    ticks={[0, 20, 40, 60, 80, 100]}
+                                                    tick={{ fill: colors.axis, fontSize: 12 }}
+                                                    axisLine={{ stroke: colors.axisLine }}
+                                                    tickLine={{ stroke: colors.axisLine }}
+                                                    label={{ value: "False Positive Rate (%)", angle: -90, position: "insideLeft", fill: colors.label }}
+                                                />
+                                                <Tooltip
+                                                    cursor={{ fill: colors.cursor }}
+                                                    content={<CustomRateTooltip resolvedTheme={resolvedTheme} />}
+                                                />
+                                                <Bar dataKey="falsePositiveRate" fill="#ea580c" name="False Positive Rate" radius={[8, 8, 0, 0]}>
+                                                    <LabelList dataKey="falsePositiveRate" position="top" fill={colors.label} formatter={(value) => formatPercent(Number(value), 0)} />
+                                                </Bar>
+                                            </BarChart>
+                                        );
+                                    })()}
                                 </ResponsiveContainer>
                             )}
                         </div>
