@@ -42,7 +42,31 @@ def test_mitigation_improves_or_preserves_fairness_score_with_cap():
 
     assert after["fairness_score"] >= before["fairness_score"]
     assert result.metadata.rows_adjusted == 3
+    assert result.metadata.adjustment_cap_applied is False
+    assert result.metadata.rows_eligible == 4
+    assert result.metadata.fairness_improvement_estimate > 0
+
+
+def test_mitigation_reports_when_cap_truncates_adjustments():
+    dataframe = pd.DataFrame(
+        {
+            "approved": [0] * 10 + [1] * 10,
+            "gender": ["F"] * 10 + ["M"] * 10,
+        }
+    )
+
+    before = BiasService.compute_analysis(dataframe, "approved", "gender")
+    result = MitigationService.apply_mitigation(dataframe, "approved", "gender")
+    after = BiasService.compute_analysis(result.dataframe, "approved", "gender")
+
+    assert after["fairness_score"] >= before["fairness_score"]
+    assert result.metadata.rows_eligible == 10
+    assert result.metadata.rows_adjusted == 3
     assert result.metadata.adjustment_cap_applied is True
+    assert result.metadata.target_rate_ceiling_applied is False
+    assert result.metadata.strength_id == "balanced"
+    assert result.metadata.strength_adjustment_cap == 0.30
+    assert result.metadata.strength_target_share == 0.65
     assert result.metadata.fairness_improvement_estimate > 0
 
 

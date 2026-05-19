@@ -21,16 +21,15 @@ except ImportError:
 from app.services.ai_service import generate_ai_insights
 
 
-def test_gemini_api():
+def run_gemini_api_check():
     """Test AI insights with Gemini API"""
 
     # Check if API key is set
     api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("❌ GEMINI_API_KEY is not set in environment")
-        print("Please add it to your .env file:")
-        print("GEMINI_API_KEY=your_actual_api_key_here")
-        return False
+    assert api_key, (
+        "GEMINI_API_KEY is not set in environment. "
+        "Please add it to your .env file: GEMINI_API_KEY=your_actual_api_key_here"
+    )
 
     print(f"✅ GEMINI_API_KEY is configured (length: {len(api_key)})")
 
@@ -71,21 +70,17 @@ def test_gemini_api():
                 for issue in issues)
         )
 
-        if is_fallback:
-            print(
-                "\n⚠️  Still using fallback - API key may be invalid, quota exceeded, or timeout issues")
-            print(
-                "Check the logs above for specific error messages (quota, timeout, etc.)")
-            return False
-        else:
-            print("\n🎉 Gemini API is working! AI insights are live.")
-            return True
+        assert not is_fallback, (
+            "Still using fallback - API key may be invalid, quota exceeded, or timeout issues. "
+            "Check the logs above for specific error messages (quota, timeout, etc.)"
+        )
+
+        print("\n🎉 Gemini API is working! AI insights are live.")
 
     except Exception as e:
-        print(f"❌ Error testing AI insights: {e}")
-        return False
+        raise AssertionError(f"Error testing AI insights: {e}") from e
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    test_gemini_api()
+    run_gemini_api_check()
