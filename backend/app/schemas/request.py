@@ -52,3 +52,4 @@ class SimplifyInsightRequest(BaseModel):
 
 class ApplyMitigationRequest(AnalyzeBiasRequest):
     strength: Literal["conservative", "balanced", "aggressive"] = Field(default="balanced")
+    targetShare: float | None = Field(default=None, ge=0, le=1)

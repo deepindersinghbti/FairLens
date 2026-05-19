@@ -81,7 +81,7 @@ export interface MitigationComparison {
 
 export interface ApplyMitigationResponse {
     original_dataset_id: string;
-    adjusted_dataset_id: string;
+    adjusted_dataset_id?: string | null;
     columns: string[];
     preview: Record<string, unknown>[];
     metadata: MitigationMetadata;
@@ -89,6 +89,20 @@ export interface ApplyMitigationResponse {
 }
 
 export type MitigationStrength = "conservative" | "balanced" | "aggressive";
+
+export interface MitigationSimulationPoint {
+    step: number;
+    targetShare: number;
+    fairness_score: number;
+    bias_gap: number;
+    disparate_impact: number;
+    selection_rates: Record<string, number>;
+    metadata?: MitigationMetadata | null;
+}
+
+export interface MitigationSimulationResponse {
+    points: MitigationSimulationPoint[];
+}
 
 export interface SimplifyInsightRequest {
     metrics: Record<string, unknown>;
@@ -194,8 +208,54 @@ export async function applyMitigation(
     targetColumn: string,
     sensitiveAttribute: string,
     predictionColumn?: string,
-    strength: MitigationStrength = "balanced"
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
 ): Promise<ApplyMitigationResponse> {
+    return requestMitigation("apply-mitigation", datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength, targetShare);
+}
+
+export async function previewMitigation(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+): Promise<ApplyMitigationResponse> {
+    return requestMitigation("preview-mitigation", datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength, targetShare);
+}
+
+export async function simulateMitigation(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced"
+): Promise<MitigationSimulationResponse> {
+    const payload = mitigationPayload(datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength);
+
+    const response = await fetch(`${API_BASE_URL}/api/simulate-mitigation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Mitigation simulation failed");
+    }
+
+    return response.json();
+}
+
+function mitigationPayload(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+) {
     const normalizedPrediction = (predictionColumn ?? "").trim();
     const predictionForPayload = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
         ? undefined
@@ -207,6 +267,7 @@ export async function applyMitigation(
         sensitive_attribute: string;
         prediction_column?: string;
         strength: MitigationStrength;
+        targetShare?: number;
     } = {
         dataset_id: datasetId,
         target_column: targetColumn,
@@ -218,7 +279,25 @@ export async function applyMitigation(
         payload.prediction_column = predictionForPayload;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/apply-mitigation`, {
+    if (typeof targetShare === "number") {
+        payload.targetShare = targetShare;
+    }
+
+    return payload;
+}
+
+async function requestMitigation(
+    endpoint: "apply-mitigation" | "preview-mitigation",
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+): Promise<ApplyMitigationResponse> {
+    const payload = mitigationPayload(datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength, targetShare);
+
+    const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

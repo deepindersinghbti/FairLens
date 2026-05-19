@@ -102,13 +102,21 @@ class MitigationService:
         sensitive_attribute: str,
         prediction_column: str | None = None,
         strength: str | None = DEFAULT_STRENGTH,
+        target_share_override: float | None = None,
     ) -> MitigationResult:
         if dataframe.empty:
             raise ValueError("Uploaded CSV is empty")
 
         strength_id, strength_config = MitigationService._strength_config(strength)
         group_adjustment_cap = float(strength_config["adjustment_cap"])
-        target_share = float(strength_config["target_share"])
+        target_share = (
+            float(strength_config["target_share"])
+            if target_share_override is None
+            else float(target_share_override)
+        )
+
+        if target_share < 0 or target_share > 1:
+            raise ValueError("Target share must be between 0 and 1")
 
         resolved_target, resolved_sensitive, resolved_prediction = MitigationService._resolve_columns(
             dataframe=dataframe,

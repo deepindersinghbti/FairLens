@@ -54,3 +54,26 @@ html.dark ::selection {
   outline: 2px solid rgba(37, 99, 235, 0.75);
   outline-offset: 2px;
 }
+
+@media print {
+  body {
+    background: #ffffff;
+    background-image: none;
+  }
+
+  button,
+  select,
+  input,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+}

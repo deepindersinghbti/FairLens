@@ -6,15 +6,12 @@ import { AnalysisResults } from "@/components/AnalysisResults";
 import { CSVUpload } from "@/components/CSVUpload";
 import { DatasetPreview } from "@/components/DatasetPreview";
 import { LoadingMessage } from "@/components/LoadingMessage";
-import { MitigationPanel } from "@/components/MitigationPanel";
+import { MitigationDashboard } from "@/components/mitigation/MitigationDashboard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   analyzeBias,
-  applyMitigation,
   uploadDataset,
   AnalysisResult,
-  ApplyMitigationResponse,
-  MitigationStrength,
   downloadFairnessReport,
   loadDemoDataset,
   LoadDemoResponse,
@@ -28,13 +25,9 @@ export default function Home() {
   const [sensitiveAttribute, setSensitiveAttribute] = useState<string>("");
   const [predictionColumn, setPredictionColumn] = useState<string>("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [mitigationResult, setMitigationResult] = useState<ApplyMitigationResponse | null>(null);
-  const [mitigationStrength, setMitigationStrength] = useState<MitigationStrength>("balanced");
   const [error, setError] = useState<string>("");
-  const [mitigationError, setMitigationError] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isApplyingMitigation, setIsApplyingMitigation] = useState(false);
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
   const [isLoadingDemo, setIsLoadingDemo] = useState(false);
   const [showSlowRequest, setShowSlowRequest] = useState(false);
@@ -43,7 +36,7 @@ export default function Home() {
   const slowRequestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derived boolean: true if any loading operation is in progress
-  const isAnyLoading = isLoadingDemo || isUploading || isAnalyzing || isApplyingMitigation;
+  const isAnyLoading = isLoadingDemo || isUploading || isAnalyzing;
 
   // Unified loading state: show "waking up server" message after 2.5 seconds
   useEffect(() => {
@@ -81,16 +74,12 @@ export default function Home() {
     setSensitiveAttribute(defaults?.suggested_sensitive || "");
     setPredictionColumn(defaults?.suggested_prediction || "");
     setResult(null);
-    setMitigationResult(null);
-    setMitigationError("");
   };
 
   const handleUpload = async (file: File) => {
     setIsUploading(true);
     setError("");
-    setMitigationError("");
     setResult(null);
-    setMitigationResult(null);
     try {
       const response = await uploadDataset(file);
       applyLoadedDataset(response);
@@ -104,9 +93,7 @@ export default function Home() {
   const handleLoadDemo = async (type: "loan" | "prediction") => {
     setIsLoadingDemo(true);
     setError("");
-    setMitigationError("");
     setResult(null);
-    setMitigationResult(null);
     try {
       const response = await loadDemoDataset(type);
       applyLoadedDataset(response, {
@@ -134,8 +121,6 @@ export default function Home() {
 
     setIsAnalyzing(true);
     setError("");
-    setMitigationError("");
-    setMitigationResult(null);
     try {
       const analysisResult = await analyzeBias(
         datasetId,
@@ -149,41 +134,6 @@ export default function Home() {
     } finally {
       setIsAnalyzing(false);
     }
-  };
-
-  const handleApplyMitigation = async () => {
-    if (!datasetId || !targetColumn || !sensitiveAttribute || !result) {
-      setMitigationError("Run a fairness analysis before applying mitigation.");
-      return;
-    }
-
-    const normalizedPrediction = predictionColumn.trim();
-    const predictionForRequest = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
-      ? undefined
-      : normalizedPrediction;
-
-    setIsApplyingMitigation(true);
-    setMitigationError("");
-    try {
-      const response = await applyMitigation(
-        datasetId,
-        targetColumn,
-        sensitiveAttribute,
-        predictionForRequest,
-        mitigationStrength
-      );
-      setMitigationResult(response);
-    } catch (err) {
-      setMitigationError(err instanceof Error ? err.message : "Mitigation failed");
-    } finally {
-      setIsApplyingMitigation(false);
-    }
-  };
-
-  const handleMitigationStrengthChange = (strength: MitigationStrength) => {
-    setMitigationStrength(strength);
-    setMitigationResult(null);
-    setMitigationError("");
   };
 
   const handleDownloadReport = async () => {
@@ -392,15 +342,13 @@ export default function Home() {
                   />
                 </div>
 
-                <MitigationPanel
+                <MitigationDashboard
+                  datasetId={datasetId}
                   analysisResult={result}
-                  mitigationResult={mitigationResult}
-                  error={mitigationError}
-                  isApplying={isApplyingMitigation}
+                  targetColumn={targetColumn}
+                  sensitiveAttribute={sensitiveAttribute}
+                  predictionColumn={predictionColumn}
                   isDisabled={isAnyLoading}
-                  strength={mitigationStrength}
-                  onStrengthChange={handleMitigationStrengthChange}
-                  onApply={handleApplyMitigation}
                 />
               </div>
             )}

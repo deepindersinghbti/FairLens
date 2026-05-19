@@ -126,7 +126,9 @@ export function MitigationPanel({
                                 Original Results vs Fairness-Adjusted Results
                             </h3>
                         </div>
-                        <DownloadMitigatedCsvButton datasetId={mitigationResult.adjusted_dataset_id} />
+                        {mitigationResult.adjusted_dataset_id && (
+                            <DownloadMitigatedCsvButton datasetId={mitigationResult.adjusted_dataset_id} />
+                        )}
                     </div>
 
                     <MitigationComparison

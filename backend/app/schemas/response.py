@@ -77,8 +77,22 @@ class MitigationMetadata(BaseModel):
 
 class MitigationComparisonResponse(BaseModel):
     original_dataset_id: str
-    adjusted_dataset_id: str
+    adjusted_dataset_id: str | None = None
     columns: List[str]
     preview: List[Dict[str, Any]]
     metadata: MitigationMetadata
     comparison: Dict[str, AnalyzeBiasResponse]
+
+
+class MitigationSimulationPoint(BaseModel):
+    step: int
+    targetShare: float
+    fairness_score: int
+    bias_gap: float
+    disparate_impact: float
+    selection_rates: Dict[str, float]
+    metadata: MitigationMetadata | None = None
+
+
+class MitigationSimulationResponse(BaseModel):
+    points: List[MitigationSimulationPoint]
