@@ -54,3 +54,211 @@ html.dark ::selection {
   outline: 2px solid rgba(37, 99, 235, 0.75);
   outline-offset: 2px;
 }
+
+@media print {
+  body {
+    background: #ffffff;
+    background-image: none;
+  }
+
+  button,
+  select,
+  input,
+  footer,
+  .print\:hidden,
+  .theme-toggle {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+
+  /* Professional report page break handling */
+  .page-break-inside-avoid,
+  .report-header,
+  .report-subheader,
+  .report-card,
+  .report-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure report page stays light in print */
+  .light {
+    color-scheme: light;
+  }
+
+  .light body,
+  .light * {
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+
+  /* Report-specific print styling */
+  .report-metric-value {
+    font-weight: 600;
+    font-size: 18px;
+  }
+
+  .report-metric-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .report-disclaimer {
+    font-size: 10px;
+    margin-top: 12px;
+    color: #666666;
+  }
+
+  /* Chart sizing for print */
+  .report-chart {
+    max-height: 300px;
+    page-break-inside: avoid;
+  }
+
+  /* Table styling for print */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: avoid;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #cccccc;
+    padding: 8px;
+    text-align: left;
+    font-size: 11px;
+  }
+
+  .report-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+}
+
+/* Ensure report table text is readable on screen (override dark-mode inheritance) */
+.report-table th,
+.report-table td {
+  color: #0f172a !important;
+  /* slate-900 */
+}
+
+/* Stronger enforcement inside the report container when the app is in dark mode
+   (next.js root may have .dark on html). The report uses a local .light wrapper,
+   so scope overrides under .light to ensure readable text on screen. */
+.light .report-card,
+.light .report-card * {
+  color: #0f172a !important;
+}
+
+.light .report-metric-label {
+  color: #334155 !important;
+  /* slate-700 */
+}
+
+.light .report-metric-value {
+  color: #0f172a !important;
+  /* slate-900 */
+}
+
+.light .report-disclaimer {
+  color: #475569 !important;
+  /* slate-600 */
+}
+
+.light .report-subheader {
+  color: #1e40af !important;
+}
+
+/* Report utility classes (also useful for screen display) */
+.page-break-inside-avoid {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+}
+
+.report-header {
+  border-bottom: 2px solid #1e3a8a;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.report-subheader {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 12px;
+}
+
+.report-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* Screen-friendly disclaimer color */
+.report-disclaimer {
+  color: #475569;
+  /* slate-600 */
+}
+
+/* Readable label styling for screen (mirrors print styles but tuned for display) */
+.report-metric-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #334155;
+  /* slate-700 */
+  margin-bottom: 6px;
+}
+
+.report-metric-value {
+  font-weight: 600;
+  font-size: 1.125rem;
+  /* ~18px */
+  color: #0f172a;
+  /* slate-900 */
+}
+
+.report-metric-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-metric-badge.high-risk {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.report-metric-badge.moderate-risk {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.report-metric-badge.low-risk {
+  background: #dcfce7;
+  color: #166534;
+}

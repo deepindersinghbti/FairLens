@@ -21,6 +21,12 @@ class DatasetService:
         dataset_path.write_bytes(raw_bytes)
         return dataset_id
 
+    def save_dataframe(self, dataframe: pd.DataFrame) -> str:
+        dataset_id = uuid.uuid4().hex
+        dataset_path = self.upload_dir / f"{dataset_id}.csv"
+        dataframe.to_csv(dataset_path, index=False)
+        return dataset_id
+
     def path_from_dataset_id(self, dataset_id: str) -> Path:
         candidate = self.upload_dir / f"{dataset_id}.csv"
         if not candidate.exists():

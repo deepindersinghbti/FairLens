@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.analysis import router as analysis_router
 from app.routes.demo import router as demo_router
 from app.routes.insights import router as insights_router
+from app.routes.mitigation import router as mitigation_router
 from app.routes.report import router as report_router
 from app.routes.upload import router as upload_router
 
@@ -43,5 +44,6 @@ api.include_router(analysis_router)
 api.include_router(insights_router)
 api.include_router(report_router)
 api.include_router(demo_router)
+api.include_router(mitigation_router)
 
 app.mount("/api", api)

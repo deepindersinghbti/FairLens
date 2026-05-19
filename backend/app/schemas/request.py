@@ -48,3 +48,8 @@ class SimplifyInsightRequest(BaseModel):
     target_column: str = Field(..., min_length=1)
     sensitive_attribute: str = Field(..., min_length=1)
     mode: Literal["dataset", "model"]
+
+
+class ApplyMitigationRequest(AnalyzeBiasRequest):
+    strength: Literal["conservative", "balanced", "aggressive"] = Field(default="balanced")
+    targetShare: float | None = Field(default=None, ge=0, le=1)

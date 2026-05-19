@@ -22,6 +22,7 @@ class AIFairnessInsights(BaseModel):
 
 
 class AnalyzeBiasResponse(BaseModel):
+    analysis_id: str | None = None  # Only provided by /analyze-bias endpoint, not by mitigation endpoints
     analysis_type: str
     selection_rates: Dict[str, float]
     selection_counts: Dict[str, GroupSelectionCount]
@@ -58,3 +59,41 @@ class LoadDemoResponse(BaseModel):
 
 class SimplifyInsightResponse(BaseModel):
     simple_explanation: str
+
+
+class MitigationMethod(BaseModel):
+    id: str
+    label: str
+
+
+class MitigationMetadata(BaseModel):
+    rowsEligible: int
+    rowsAdjusted: int
+    adjustmentCapApplied: bool
+    targetRateCeilingApplied: bool
+    fairnessImprovementEstimate: float
+    method: MitigationMethod
+    strength: Dict[str, Any]
+
+
+class MitigationComparisonResponse(BaseModel):
+    original_dataset_id: str
+    adjusted_dataset_id: str | None = None
+    columns: List[str]
+    preview: List[Dict[str, Any]]
+    metadata: MitigationMetadata
+    comparison: Dict[str, AnalyzeBiasResponse]
+
+
+class MitigationSimulationPoint(BaseModel):
+    step: int
+    targetShare: float
+    fairness_score: int
+    bias_gap: float
+    disparate_impact: float
+    selection_rates: Dict[str, float]
+    metadata: MitigationMetadata | None = None
+
+
+class MitigationSimulationResponse(BaseModel):
+    points: List[MitigationSimulationPoint]

@@ -28,6 +28,7 @@ export interface AIFairnessInsights {
 }
 
 export interface AnalysisResult {
+    analysis_id?: string;  // Only provided by /analyze-bias endpoint
     analysis_type: "dataset" | "model_prediction";
     selection_rates: Record<string, number>;
     selection_counts: Record<string, GroupSelectionCount>;
@@ -51,6 +52,57 @@ export interface AnalysisResult {
     ai_fairness_insights?: AIFairnessInsights | null;
     ai_insights_source?: "gemini" | "fallback" | string | null;
     ai_insights_warning?: string | null;
+}
+
+export interface MitigationMethod {
+    id: "deterministic_rebalancing" | string;
+    label: string;
+}
+
+export interface MitigationMetadata {
+    rowsEligible: number;
+    rowsAdjusted: number;
+    adjustmentCapApplied: boolean;
+    targetRateCeilingApplied: boolean;
+    fairnessImprovementEstimate: number;
+    method: MitigationMethod;
+    strength: {
+        id: MitigationStrength;
+        label: string;
+        description: string;
+        adjustmentCap: number;
+        targetShare: number;
+    };
+}
+
+export interface MitigationComparison {
+    before: AnalysisResult;
+    after: AnalysisResult;
+}
+
+export interface ApplyMitigationResponse {
+    original_dataset_id: string;
+    adjusted_dataset_id?: string | null;
+    columns: string[];
+    preview: Record<string, unknown>[];
+    metadata: MitigationMetadata;
+    comparison: MitigationComparison;
+}
+
+export type MitigationStrength = "conservative" | "balanced" | "aggressive";
+
+export interface MitigationSimulationPoint {
+    step: number;
+    targetShare: number;
+    fairness_score: number;
+    bias_gap: number;
+    disparate_impact: number;
+    selection_rates: Record<string, number>;
+    metadata?: MitigationMetadata | null;
+}
+
+export interface MitigationSimulationResponse {
+    points: MitigationSimulationPoint[];
 }
 
 export interface SimplifyInsightRequest {
@@ -152,6 +204,126 @@ export async function simplifyInsight(payload: SimplifyInsightRequest): Promise<
     return response.json();
 }
 
+export async function applyMitigation(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+): Promise<ApplyMitigationResponse> {
+    return requestMitigation("apply-mitigation", datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength, targetShare);
+}
+
+export async function previewMitigation(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+): Promise<ApplyMitigationResponse> {
+    return requestMitigation("preview-mitigation", datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength, targetShare);
+}
+
+export async function simulateMitigation(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced"
+): Promise<MitigationSimulationResponse> {
+    const payload = mitigationPayload(datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength);
+
+    const response = await fetch(`${API_BASE_URL}/api/simulate-mitigation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Mitigation simulation failed");
+    }
+
+    return response.json();
+}
+
+function mitigationPayload(
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+) {
+    const normalizedPrediction = (predictionColumn ?? "").trim();
+    const predictionForPayload = ["", "none", "null"].includes(normalizedPrediction.toLowerCase())
+        ? undefined
+        : normalizedPrediction;
+
+    const payload: {
+        dataset_id: string;
+        target_column: string;
+        sensitive_attribute: string;
+        prediction_column?: string;
+        strength: MitigationStrength;
+        targetShare?: number;
+    } = {
+        dataset_id: datasetId,
+        target_column: targetColumn,
+        sensitive_attribute: sensitiveAttribute,
+        strength,
+    };
+
+    if (predictionForPayload) {
+        payload.prediction_column = predictionForPayload;
+    }
+
+    if (typeof targetShare === "number") {
+        payload.targetShare = targetShare;
+    }
+
+    return payload;
+}
+
+async function requestMitigation(
+    endpoint: "apply-mitigation" | "preview-mitigation",
+    datasetId: string,
+    targetColumn: string,
+    sensitiveAttribute: string,
+    predictionColumn?: string,
+    strength: MitigationStrength = "balanced",
+    targetShare?: number
+): Promise<ApplyMitigationResponse> {
+    const payload = mitigationPayload(datasetId, targetColumn, sensitiveAttribute, predictionColumn, strength, targetShare);
+
+    const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Mitigation failed");
+    }
+
+    return response.json();
+}
+
+export async function downloadDataset(datasetId: string): Promise<Blob> {
+    const url = `${API_BASE_URL}/api/download-dataset?dataset_id=${encodeURIComponent(datasetId)}`;
+    const response = await fetch(url, { method: "GET" });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Dataset download failed");
+    }
+
+    return response.blob();
+}
+
 export async function loadDemoDataset(type: "loan" | "prediction"): Promise<LoadDemoResponse> {
     const response = await fetch(`${API_BASE_URL}/api/load-demo?type=${encodeURIComponent(type)}`, {
         method: "GET",
@@ -160,6 +332,81 @@ export async function loadDemoDataset(type: "loan" | "prediction"): Promise<Load
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || "Failed to load demo dataset");
+    }
+
+    return response.json();
+}
+
+// Report Payload Types (for professional audit report page)
+export interface ReportSelectionData {
+    group: string;
+    rate: number;
+    selected: number;
+    total: number;
+}
+
+export interface ReportMetrics {
+    demographic_parity_difference: number;
+    disparate_impact: number;
+    equal_opportunity_difference?: number | null;
+}
+
+export interface ReportMitigationData {
+    strength_id: string;
+    strength_label: string;
+    rows_adjusted: number;
+    rows_eligible: number;
+    adjustment_cap_applied: boolean;
+    target_rate_ceiling_applied: boolean;
+    fairness_improvement_estimate: number;
+    before_fairness_score: number;
+    after_fairness_score: number;
+    before_selection_rates: Record<string, number>;
+    after_selection_rates: Record<string, number>;
+}
+
+export interface ReportAIInsights {
+    summary: string;
+    risk_level: string;
+    issues: string[];
+    recommendations: string[];
+}
+
+export interface ReportPayload {
+    analysis_id: string;
+    generated_at: string;
+    dataset_name: string;
+    target_column: string;
+    sensitive_attribute: string;
+    analysis_type: string;
+    fairness_score: number;
+    fairness_risk_level: string;
+    most_affected_group: string;
+    impact_gap_percentage: number;
+    bias_detected: boolean;
+    fairness_metrics: ReportMetrics;
+    selection_data: ReportSelectionData[];
+    confidence_score?: number;
+    confidence_explanation?: string[];
+    data_quality_label?: string;
+    key_findings: string[];
+    plain_language_summary: string;
+    chart_data: Record<string, unknown>;
+    warnings: string[];
+    recommendations: string[];
+    mitigation_data?: ReportMitigationData;
+    ai_insights?: ReportAIInsights;
+    ai_insights_source?: string;
+    ai_insights_disclaimer: string;
+    report_disclaimer: string;
+}
+
+export async function getReportData(analysisId: string): Promise<ReportPayload> {
+    const response = await fetch(`${API_BASE_URL}/api/report-data/${encodeURIComponent(analysisId)}`);
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to load report data");
     }
 
     return response.json();
