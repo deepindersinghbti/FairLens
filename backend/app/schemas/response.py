@@ -22,7 +22,7 @@ class AIFairnessInsights(BaseModel):
 
 
 class AnalyzeBiasResponse(BaseModel):
-    analysis_id: str  # Unique identifier for this analysis (can be used to retrieve report)
+    analysis_id: str | None = None  # Only provided by /analyze-bias endpoint, not by mitigation endpoints
     analysis_type: str
     selection_rates: Dict[str, float]
     selection_counts: Dict[str, GroupSelectionCount]

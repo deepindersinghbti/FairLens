@@ -19,13 +19,37 @@ export default function SelectionRateChartReport({
         total: item.total,
     }));
 
+    // Custom Y axis label component to ensure vertical centering
+    const YAxisCenteredLabel = (props: any) => {
+        const { x, y, width, height, value, stroke } = props;
+        // compute center of the axis area
+        const centerY = (y ?? 0) + (height ?? 0) / 2;
+        const centerX = (x ?? 0);
+        const fill = stroke ?? '#475569';
+        return (
+            <text
+                x={centerX}
+                y={centerY}
+                transform={`rotate(-90 ${centerX} ${centerY})`}
+                textAnchor="middle"
+                fill={fill}
+                style={{ fontSize: 12 }}
+            >
+                {value}
+            </text>
+        );
+    };
+
     return (
         <div className="page-break-inside-avoid bg-white border border-slate-200 rounded p-4">
             <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
+                <BarChart data={chartData} margin={{ top: 48, right: 20, left: 20, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
                     <XAxis dataKey="name" stroke="#475569" />
-                    <YAxis stroke="#475569" label={{ value: 'Selection Rate (%)', angle: -90, position: 'insideLeft' }} />
+                    <YAxis
+                        stroke="#475569"
+                        label={{ value: 'Selection Rate (%)', angle: -90, position: 'insideLeft', dy: 6 }}
+                    />
                     <Tooltip
                         contentStyle={{
                             backgroundColor: '#ffffff',

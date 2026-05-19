@@ -36,8 +36,8 @@ export default function ExecutiveSummary({
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {/* Fairness Score */}
                 <div className="report-card">
-                    <div className="report-metric-label">Fairness Score</div>
-                    <div className={`report-metric-value ${getScoreColor(fairnessScore)}`}>
+                    <div className="report-metric-label text-slate-700 dark:text-slate-200">Fairness Score</div>
+                    <div className={`report-metric-value ${getScoreColor(fairnessScore)} `}>
                         {fairnessScore}
                     </div>
                     <div className="text-xs text-slate-600 mt-1">out of 100</div>
@@ -45,7 +45,7 @@ export default function ExecutiveSummary({
 
                 {/* Risk Level */}
                 <div className="report-card">
-                    <div className="report-metric-label">Risk Level</div>
+                    <div className="report-metric-label text-slate-700 dark:text-slate-200">Risk Level</div>
                     <div className={`font-semibold py-2 rounded text-center ${getRiskBadgeColor(riskLevel)}`}>
                         {riskLevel.replace(' Risk', '')}
                     </div>
@@ -53,16 +53,16 @@ export default function ExecutiveSummary({
 
                 {/* Most Affected Group */}
                 <div className="report-card">
-                    <div className="report-metric-label">Most Affected Group</div>
-                    <div className="font-semibold text-slate-900 mt-2 text-sm">
+                    <div className="report-metric-label text-slate-700 dark:text-slate-200">Most Affected Group</div>
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 mt-2 text-sm">
                         {mostAffectedGroup}
                     </div>
                 </div>
 
                 {/* Impact Gap */}
                 <div className="report-card">
-                    <div className="report-metric-label">Impact Gap</div>
-                    <div className="text-2xl font-bold text-slate-900 mt-2">
+                    <div className="report-metric-label text-slate-700 dark:text-slate-200">Impact Gap</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-2">
                         {impactGapPercentage.toFixed(1)}%
                     </div>
                     <div className="text-xs text-slate-600 mt-1">Lower selection rate</div>

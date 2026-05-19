@@ -43,6 +43,8 @@ def save_analysis_with_id(analysis: dict[str, Any]) -> str:
         "expires_at": expires_at.isoformat(),
     }
     
+    print(f"[DEBUG] Saved analysis with ID: {analysis_id}, expires_at: {expires_at.isoformat()}")
+    
     return analysis_id
 
 
@@ -52,19 +54,26 @@ def get_analysis_by_id(analysis_id: str) -> dict[str, Any] | None:
     
     Returns None if expired or not found.
     """
+    print(f"[DEBUG] Getting analysis with ID: {analysis_id}, store size: {len(_analysis_store)}")
+    print(f"[DEBUG] Available IDs in store: {list(_analysis_store.keys())}")
+    
     entry = _analysis_store.get(analysis_id)
     if entry is None:
+        print(f"[DEBUG] Analysis ID not found in store")
         return None
     
     # Check if expired
     expires_at_str = entry.get("expires_at")
     if expires_at_str:
         expires_at = datetime.fromisoformat(expires_at_str)
-        if datetime.now(timezone.utc) > expires_at:
+        now = datetime.now(timezone.utc)
+        if now > expires_at:
+            print(f"[DEBUG] Analysis has expired")
             # Clean up expired entry
             del _analysis_store[analysis_id]
             return None
     
+    print(f"[DEBUG] Successfully retrieved analysis")
     return entry.get("data")
 
 

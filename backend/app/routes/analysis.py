@@ -38,6 +38,7 @@ async def analyze_bias(payload: AnalyzeBiasRequest) -> AnalyzeBiasResponse:
         
         # Save with new ID-based system and get analysis_id
         analysis_id = save_analysis_with_id(analysis)
+        print(f"[DEBUG] Analyze-bias endpoint returning analysis_id: {analysis_id}")
 
         return AnalyzeBiasResponse(
             analysis_id=analysis_id,

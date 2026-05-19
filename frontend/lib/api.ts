@@ -28,7 +28,7 @@ export interface AIFairnessInsights {
 }
 
 export interface AnalysisResult {
-    analysis_id: string;  // Unique identifier for retrieving report
+    analysis_id?: string;  // Only provided by /analyze-bias endpoint
     analysis_type: "dataset" | "model_prediction";
     selection_rates: Record<string, number>;
     selection_counts: Record<string, GroupSelectionCount>;

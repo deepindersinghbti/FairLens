@@ -145,6 +145,40 @@ html.dark ::selection {
   }
 }
 
+/* Ensure report table text is readable on screen (override dark-mode inheritance) */
+.report-table th,
+.report-table td {
+  color: #0f172a !important;
+  /* slate-900 */
+}
+
+/* Stronger enforcement inside the report container when the app is in dark mode
+   (next.js root may have .dark on html). The report uses a local .light wrapper,
+   so scope overrides under .light to ensure readable text on screen. */
+.light .report-card,
+.light .report-card * {
+  color: #0f172a !important;
+}
+
+.light .report-metric-label {
+  color: #334155 !important;
+  /* slate-700 */
+}
+
+.light .report-metric-value {
+  color: #0f172a !important;
+  /* slate-900 */
+}
+
+.light .report-disclaimer {
+  color: #475569 !important;
+  /* slate-600 */
+}
+
+.light .report-subheader {
+  color: #1e40af !important;
+}
+
 /* Report utility classes (also useful for screen display) */
 .page-break-inside-avoid {
   page-break-inside: avoid;
@@ -179,6 +213,31 @@ html.dark ::selection {
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
+}
+
+/* Screen-friendly disclaimer color */
+.report-disclaimer {
+  color: #475569;
+  /* slate-600 */
+}
+
+/* Readable label styling for screen (mirrors print styles but tuned for display) */
+.report-metric-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #334155;
+  /* slate-700 */
+  margin-bottom: 6px;
+}
+
+.report-metric-value {
+  font-weight: 600;
+  font-size: 1.125rem;
+  /* ~18px */
+  color: #0f172a;
+  /* slate-900 */
 }
 
 .report-metric-badge {

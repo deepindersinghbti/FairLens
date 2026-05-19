@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ReportPayload } from '@/lib/api';
+import { ReportPayload, getReportData } from '@/lib/api';
 import FairnessAuditReport from '@/components/report/FairnessAuditReport';
 import ReportExpiredPage from '@/components/report/ReportExpiredPage';
 import { LoadingMessage } from '@/components/LoadingMessage';
@@ -19,19 +19,9 @@ export default function ReportPage() {
     useEffect(() => {
         const fetchReportData = async () => {
             try {
-                const response = await fetch(`/api/report-data/${analysisId}`);
-
-                if (response.status === 404) {
-                    setError('expired');
-                    setIsLoading(false);
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to load report data');
-                }
-
-                const data: ReportPayload = await response.json();
+                console.log('[DEBUG] Report page loading, analysisId:', analysisId);
+                const data = await getReportData(analysisId);
+                console.log('[DEBUG] Successfully fetched report data');
                 setReportData(data);
                 setIsLoading(false);
 
@@ -39,8 +29,16 @@ export default function ReportPage() {
                 setTimeout(() => {
                     setIsPrintReady(true);
                 }, 500);
-            } catch (err) {
-                setError('network');
+            } catch (err: unknown) {
+                const errorMsg = err instanceof Error ? err.message : String(err);
+                console.log('[DEBUG] Error fetching report:', errorMsg);
+
+                if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+                    console.log('[DEBUG] Got 404 - analysis not found/expired');
+                    setError('expired');
+                } else {
+                    setError('network');
+                }
                 setIsLoading(false);
             }
         };
@@ -100,8 +98,8 @@ export default function ReportPage() {
                         onClick={() => window.print()}
                         disabled={!isPrintReady}
                         className={`px-4 py-2 rounded font-medium ${isPrintReady
-                                ? 'bg-blue-800 text-white hover:bg-blue-900 cursor-pointer'
-                                : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            ? 'bg-blue-800 text-white hover:bg-blue-900 cursor-pointer'
+                            : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                             }`}
                     >
                         Print / Save as PDF

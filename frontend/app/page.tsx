@@ -137,8 +137,17 @@ export default function Home() {
   };
 
   const handleGenerateAuditReport = () => {
-    if (!result) return;
+    console.log('[DEBUG] Generate Audit Report clicked');
+    console.log('[DEBUG] result:', result);
+    console.log('[DEBUG] analysis_id:', result?.analysis_id);
+
+    if (!result || !result.analysis_id) {
+      console.log('[DEBUG] Missing result or analysis_id, aborting');
+      return;
+    }
+
     const reportUrl = `/report/${result.analysis_id}`;
+    console.log('[DEBUG] Opening report URL:', reportUrl);
     window.open(reportUrl, '_blank');
   };
 
