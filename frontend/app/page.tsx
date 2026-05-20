@@ -370,7 +370,9 @@ export default function Home() {
         )}
 
         <footer className="border-t border-slate-200 pt-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          <p>Phase 3 MVP • Dataset and Model Prediction Bias Analysis</p>
+          <p>FairLens • Dataset & Model Bias Analysis for Responsible AI</p>
+          <p>Built by Deepinder Singh • <a href="https://github.com/deepindersinghbti/FairLens">GitHub</a></p>
+          <p>© 2026 FairLens</p>
         </footer>
       </div>
     </main>

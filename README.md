@@ -1,4 +1,4 @@
-# FairLens - Bias Detection Dashboard
+https://github.com/deepindersinghbti/FairLens# FairLens - Bias Detection Dashboard
 
 **Status**: Complete & Live
 
