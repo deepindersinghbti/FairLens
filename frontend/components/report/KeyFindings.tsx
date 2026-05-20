@@ -2,6 +2,8 @@ interface KeyFindingsProps {
     findings: string[];
 }
 
+import MarkdownRenderer from '@/components/common/MarkdownRenderer';
+
 export default function KeyFindings({ findings }: KeyFindingsProps) {
     return (
         <div className="page-break-inside-avoid">
@@ -10,7 +12,7 @@ export default function KeyFindings({ findings }: KeyFindingsProps) {
             <ol className="space-y-3 list-decimal list-inside text-slate-800">
                 {findings.map((finding, index) => (
                     <li key={index} className="text-sm leading-relaxed">
-                        {finding}
+                        <MarkdownRenderer content={finding} className="m-0" />
                     </li>
                 ))}
             </ol>
