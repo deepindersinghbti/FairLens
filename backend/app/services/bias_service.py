@@ -30,7 +30,8 @@ class BiasService:
             return requested
 
         lowered = requested.lower()
-        candidates = [col for col in dataframe.columns if str(col).lower() == lowered]
+        candidates = [col for col in dataframe.columns if str(
+            col).lower() == lowered]
 
         if len(candidates) == 1:
             return str(candidates[0])
@@ -41,7 +42,8 @@ class BiasService:
             )
 
         available = ", ".join(str(col) for col in dataframe.columns)
-        raise ValueError(f"{field_label} '{column_name}' not found. Available columns: {available}")
+        raise ValueError(
+            f"{field_label} '{column_name}' not found. Available columns: {available}")
 
     @staticmethod
     def _dataset_quality_metadata(
@@ -455,9 +457,9 @@ class BiasService:
         bias_detected = disparate_impact < 0.8 or equal_opportunity_difference > 0.1 or fpr_difference > 0.1
         insights = BiasService._append_data_shape_insights(
             BiasService._prediction_insights(
-            disparate_impact=disparate_impact,
-            equal_opportunity_difference=equal_opportunity_difference,
-            false_positive_rates=false_positive_rates,
+                disparate_impact=disparate_impact,
+                equal_opportunity_difference=equal_opportunity_difference,
+                false_positive_rates=false_positive_rates,
             ),
             selection_rates,
         )
@@ -486,7 +488,8 @@ class BiasService:
         resolved_sensitive = BiasService._resolve_column_name(
             dataframe, sensitive_attribute, "Sensitive attribute"
         )
-        normalized_prediction = BiasService._normalize_optional_prediction(prediction_column)
+        normalized_prediction = BiasService._normalize_optional_prediction(
+            prediction_column)
         resolved_prediction = None
 
         if normalized_prediction is not None:

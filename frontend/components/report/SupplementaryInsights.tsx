@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { ReportAIInsights } from '@/lib/api';
+import MarkdownRenderer from '@/components/common/MarkdownRenderer';
 
 interface SupplementaryInsightsProps {
     insights: ReportAIInsights;
@@ -36,7 +37,7 @@ export default function SupplementaryInsights({
                     {/* Summary */}
                     <div>
                         <h3 className="font-semibold text-slate-900 mb-2">Summary</h3>
-                        <p className="text-sm text-slate-700 leading-relaxed">{insights.summary}</p>
+                        <MarkdownRenderer content={insights.summary} className="text-sm text-slate-700 leading-relaxed" />
                     </div>
 
                     {/* Risk Level */}
@@ -53,7 +54,9 @@ export default function SupplementaryInsights({
                             <h3 className="font-semibold text-slate-900 mb-2">Identified Issues</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
                                 {insights.issues.map((issue, idx) => (
-                                    <li key={idx}>{issue}</li>
+                                    <li key={idx} className="leading-relaxed">
+                                        <MarkdownRenderer content={issue} className="m-0" inline />
+                                    </li>
                                 ))}
                             </ul>
                         </div>
@@ -65,7 +68,9 @@ export default function SupplementaryInsights({
                             <h3 className="font-semibold text-slate-900 mb-2">AI Recommendations</h3>
                             <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
                                 {insights.recommendations.map((rec, idx) => (
-                                    <li key={idx}>{rec}</li>
+                                    <li key={idx} className="leading-relaxed">
+                                        <MarkdownRenderer content={rec} className="m-0" inline />
+                                    </li>
                                 ))}
                             </ul>
                         </div>

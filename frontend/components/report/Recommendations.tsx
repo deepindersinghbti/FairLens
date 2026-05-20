@@ -2,6 +2,8 @@ interface RecommendationsProps {
     recommendations: string[];
 }
 
+import MarkdownRenderer from '@/components/common/MarkdownRenderer';
+
 export default function Recommendations({ recommendations }: RecommendationsProps) {
     return (
         <div className="page-break-inside-avoid">
@@ -10,7 +12,7 @@ export default function Recommendations({ recommendations }: RecommendationsProp
             <ul className="space-y-3 list-disc list-inside text-slate-800">
                 {recommendations.map((rec, index) => (
                     <li key={index} className="text-sm leading-relaxed">
-                        {rec}
+                        <MarkdownRenderer content={rec} className="m-0" inline />
                     </li>
                 ))}
             </ul>

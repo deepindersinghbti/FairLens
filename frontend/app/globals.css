@@ -5,6 +5,9 @@
   --background: #f8fafc;
   --foreground: #0f172a;
   color-scheme: light;
+  /* Fallback font variables to avoid remote Google Fonts during build */
+  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", "Helvetica Neue", monospace;
 }
 
 html.dark {
@@ -261,4 +264,59 @@ html.dark ::selection {
 .report-metric-badge.low-risk {
   background: #dcfce7;
   color: #166534;
+}
+
+/* Markdown / Prose tweaks for consistent report rendering */
+.prose code::before,
+.prose code::after {
+  content: "";
+}
+
+/* Make inline code readable in dark mode and print */
+.prose code {
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
+html.dark .prose code {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+/* Blockquote styling for reports */
+.prose blockquote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1rem;
+  color: #475569;
+  background: rgba(226, 232, 240, 0.4);
+  border-radius: 4px;
+}
+
+html.dark .prose blockquote {
+  border-left-color: #334155;
+  background: rgba(15, 23, 42, 0.12);
+  color: #cbd5e1;
+}
+
+/* Inline markdown wrapper used for list items so markers and content stay on one line */
+.inline-markdown {
+  display: inline;
+}
+
+.inline-markdown code {
+  background: rgba(15, 23, 42, 0.04);
+  padding: 0.05rem 0.2rem;
+  border-radius: 4px;
+}
+
+/* Ensure printouts preserve readable text for prose */
+@media print {
+  .prose {
+    color: #000000 !important;
+  }
+  .prose code {
+    background: #f3f4f6 !important;
+    color: #000000 !important;
+  }
 }
