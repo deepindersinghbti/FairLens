@@ -16,7 +16,6 @@ import { DatasetDiagnostics } from "@/components/analysis/DatasetDiagnostics";
 import { MetricHelp } from "@/components/analysis/MetricHelp";
 import { MitigationTimelineChart } from "@/components/charts/MitigationTimelineChart";
 import { SelectionRateComparisonChart } from "@/components/charts/SelectionRateComparisonChart";
-import { PrintableFairnessReport } from "@/components/mitigation/PrintableFairnessReport";
 import { metricDefinitions } from "@/lib/fairness-ui/definitions";
 import { groupRateRows, interventionLevel, previewCacheKey, timelineCacheKey } from "@/lib/fairness-ui/dashboard";
 import { formatRate, formatSignedNumberDelta, formatSignedPercentDelta } from "@/lib/fairness-ui/formatters";
@@ -395,7 +394,6 @@ export function MitigationDashboard({
 
                 {activeTab === "Report" && (
                     <div className="space-y-4">
-                        <PrintableFairnessReport original={analysisResult} preview={preview} />
                         <button
                             type="button"
                             onClick={handleDownload}
