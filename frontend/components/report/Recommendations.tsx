@@ -12,7 +12,7 @@ export default function Recommendations({ recommendations }: RecommendationsProp
             <ul className="space-y-3 list-disc list-inside text-slate-800">
                 {recommendations.map((rec, index) => (
                     <li key={index} className="text-sm leading-relaxed">
-                        <MarkdownRenderer content={rec} className="m-0" />
+                        <MarkdownRenderer content={rec} className="m-0" inline />
                     </li>
                 ))}
             </ul>

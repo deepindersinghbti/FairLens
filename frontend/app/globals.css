@@ -299,6 +299,17 @@ html.dark .prose blockquote {
   color: #cbd5e1;
 }
 
+/* Inline markdown wrapper used for list items so markers and content stay on one line */
+.inline-markdown {
+  display: inline;
+}
+
+.inline-markdown code {
+  background: rgba(15, 23, 42, 0.04);
+  padding: 0.05rem 0.2rem;
+  border-radius: 4px;
+}
+
 /* Ensure printouts preserve readable text for prose */
 @media print {
   .prose {

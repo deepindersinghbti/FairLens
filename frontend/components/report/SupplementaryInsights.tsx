@@ -55,7 +55,7 @@ export default function SupplementaryInsights({
                             <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
                                 {insights.issues.map((issue, idx) => (
                                     <li key={idx} className="leading-relaxed">
-                                        <MarkdownRenderer content={issue} className="m-0" />
+                                        <MarkdownRenderer content={issue} className="m-0" inline />
                                     </li>
                                 ))}
                             </ul>
@@ -69,7 +69,7 @@ export default function SupplementaryInsights({
                             <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
                                 {insights.recommendations.map((rec, idx) => (
                                     <li key={idx} className="leading-relaxed">
-                                        <MarkdownRenderer content={rec} className="m-0" />
+                                        <MarkdownRenderer content={rec} className="m-0" inline />
                                     </li>
                                 ))}
                             </ul>

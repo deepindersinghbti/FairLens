@@ -12,7 +12,7 @@ export default function KeyFindings({ findings }: KeyFindingsProps) {
             <ol className="space-y-3 list-decimal list-inside text-slate-800">
                 {findings.map((finding, index) => (
                     <li key={index} className="text-sm leading-relaxed">
-                        <MarkdownRenderer content={finding} className="m-0" />
+                        <MarkdownRenderer content={finding} className="m-0" inline />
                     </li>
                 ))}
             </ol>
