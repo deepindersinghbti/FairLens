@@ -384,7 +384,7 @@ export function AnalysisResults({ result, targetColumn, sensitiveAttribute }: An
                             ))}
                         </div>
                     )}
-                        <div className="mt-4">
+                    <div className="mt-4">
                         <ResponsiveContainer width="100%" height={300}>
                             {(() => {
                                 const maxRaw = selectionChartData.length ? Math.max(...selectionChartData.map((d) => Number((d as any).selectionRate ?? 0))) : 0;
